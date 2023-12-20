@@ -1,0 +1,1 @@
+[(tick_num, 'p'), (tick_num, 'e'), (tick_num, 'n'),  (tick_num, 's'), (tick_num, 'k'), (tick_num, 'o'), (tick_num, 'i'), (tick_num, '10')]
