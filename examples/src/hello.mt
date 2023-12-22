@@ -10,7 +10,6 @@ out_port:
 
 _start:
     load message
-    jz end
     store cycles
     loop:
         load pointer
@@ -22,5 +21,4 @@ _start:
         dec
         store cycles
         jnz loop
-    end:
-        halt
+    halt
