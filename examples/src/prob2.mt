@@ -13,24 +13,23 @@ out_port:
     .word 1
 
 _start:
-    loop:
+    load cur
+    cmp limit
+    jg end
+    test 1
+    jnz finally
+    if_even:
+        load result
+        add cur
+        store result
+    finally:
         load cur
-        cmp limit
-        jg end
-        test 1
-        jnz finally
-        if_even:
-            load result
-            add cur
-            store result
-        finally:
-            load cur
-            store tmp
-            add prev
-            store cur
-            load tmp
-            store prev
-        jmp loop
+        store tmp
+        add prev
+        store cur
+        load tmp
+        store prev
+    jmp _start
     end:
         load limit
         out out_port
