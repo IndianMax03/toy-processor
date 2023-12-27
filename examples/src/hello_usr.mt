@@ -99,6 +99,6 @@ interrupt:
 buffer_len:
     .word 0
 buffer_pointer:
-    .worf buffer
+    .word buffer
 buffer:
     .word 0
