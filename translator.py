@@ -16,6 +16,7 @@ def symbol_to_opcode(symbol):
         "iret": Opcode.IRET,
         "load": Opcode.LOAD,
         "store": Opcode.STORE,
+        "add": Opcode.ADD,
         "out": Opcode.OUT,
         "in": Opcode.IN,
         "cmp": Opcode.CMP,
@@ -132,7 +133,7 @@ def to_machine_code(raw_code):
     code = []
     for index, word in raw_code.items():
         if len(word) == 2:
-            code.append({"index" : index, "opcode": symbol_to_opcode(word[0]), "value": word[0] if word[0] not in Opcode._value2member_map_ else None, "is_indirect": word[1]})
+            code.append({"index" : index, "opcode": symbol_to_opcode(word[0]), "value": word[0] if word[0] not in Opcode._value2member_map_ else 0, "is_indirect": word[1]})
         elif len(word) == 3:
             code.append({"index" : index, "opcode": symbol_to_opcode(word[0]), "value": word[1], "is_indirect": word[2]})
         else:
@@ -147,6 +148,8 @@ def translate(source_filename, debug_mode = False):
     _start_position = find_program_start(labels)
     raw_code = link_labels(words, labels)
     code = to_machine_code(raw_code)
+    
+    code = [{"_start": _start_position}] + code
     
     if debug_mode:
         print(f"------> TRANSLATOR: DEBUG MODE ON")
@@ -164,7 +167,7 @@ def translate(source_filename, debug_mode = False):
     return code
 
 def main(source_filename, target_filename):
-    code = translate(source_filename)
+    code = translate(source_filename, True)
     
     write_code(target_filename, code)
 
