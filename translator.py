@@ -61,7 +61,7 @@ def parse_word(position, word_line, words):
                 position += 1
                 char_num += 1
             char_num += 1
-        elif word_line[char_num].isnumeric():
+        elif word_line[char_num].isnumeric() or word_line[char_num] == '-':
             cur_num = word_line[char_num]
             char_num += 1
             while char_num < len(word_line) and word_line[char_num].isnumeric():
