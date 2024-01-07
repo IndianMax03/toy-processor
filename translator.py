@@ -129,8 +129,8 @@ def link_labels(words, labels):
         replaced[w_index] = new_word
     return replaced
 
-def to_machine_code(raw_code):
-    code = []
+def to_machine_code(raw_code, _start_position):
+    code = [{"index" : 0, "opcode": Opcode.JMP, "value": _start_position, "is_indirect": False}]
     for index, word in raw_code.items():
         if len(word) == 2:
             code.append({"index" : index, "opcode": symbol_to_opcode(word[0]), "value": word[0] if word[0] not in Opcode._value2member_map_ else 0, "is_indirect": word[1]})
@@ -145,11 +145,9 @@ def translate(source_filename, debug_mode = False):
     lines = read_lines(source_filename)
     lines_without_comments = remove_comments(lines)
     words, labels = lines_to_words_and_labels(lines_without_comments)
-    _start_position = find_program_start(labels)
     raw_code = link_labels(words, labels)
-    code = to_machine_code(raw_code)
-    
-    code = [{"_start": _start_position}] + code
+    _start_position = find_program_start(labels)
+    code = to_machine_code(raw_code, _start_position)
     
     if debug_mode:
         print(f"------> TRANSLATOR: DEBUG MODE ON")
