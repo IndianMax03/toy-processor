@@ -1,4 +1,4 @@
-org 0
+org 1
 vector:
     .word interrupt
 
