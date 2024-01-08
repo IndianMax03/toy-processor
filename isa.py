@@ -10,8 +10,10 @@ class Program_Mode(str, Enum):
         return str(self.value)
 
 class ALU_Opcode(str, Enum):
-    INC = "inc"
-    DEC = "dec"
+    INC_A = "inc_a"
+    INC_B = "inc_b"
+    DEC_A = "dec_a"
+    DEC_B = "dec_b"
     ADD = "add"
     CMP = "cmp"
     TEST = "test"
@@ -56,8 +58,8 @@ class Selectors(str, Enum):
     FROM_DR = "from_dr"
     FROM_PC = "from_pc"
     FROM_SP = "from_sp"
-    LEFT_SIDE = "left_side"
-    RIGHT_SIDE = "right_side"
+    FROM_AC = "from_ac"
+    FROM_PS = "from_ps"
     
     def __str__(self) -> str:
         return str(self.value)
@@ -82,7 +84,5 @@ def write_code(filename, code):
 def read_code(filename):
     with open(filename, encoding="utf-8") as file:
         code = json.loads(file.read())
-    
-    _start = code.pop(0)['_start']
 
-    return _start, code
+    return code
