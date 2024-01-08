@@ -1,30 +1,50 @@
 import logging
 import sys
 
-from isa import Opcode, ALU_Opcode, Selectors, Program_Mode, read_code, nullar_instructions, onear_instructions, branch_instructions
+from isa import (
+    Opcode,
+    ALU_Opcode,
+    Selectors,
+    Program_Mode,
+    read_code,
+    nullar_instructions,
+    onear_instructions,
+    branch_instructions,
+)
+
 
 class Halt(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
 
+
 class ALU:
-    
-    alu_operations = [ALU_Opcode.INC_A, ALU_Opcode.INC_B, ALU_Opcode.DEC_A, ALU_Opcode.DEC_B, ALU_Opcode.ADD, ALU_Opcode.CMP, ALU_Opcode.TEST, ALU_Opcode.SKIP_A, ALU_Opcode.SKIP_B]
+    alu_operations = [
+        ALU_Opcode.INC_A,
+        ALU_Opcode.INC_B,
+        ALU_Opcode.DEC_A,
+        ALU_Opcode.DEC_B,
+        ALU_Opcode.ADD,
+        ALU_Opcode.CMP,
+        ALU_Opcode.TEST,
+        ALU_Opcode.SKIP_A,
+        ALU_Opcode.SKIP_B,
+    ]
     result = None
     src_a = None
     src_b = None
     operation = None
     n_flag = None
     z_flag = None
-    
+
     def __init__(self):
         self.result = 0
         self.src_a = None
         self.src_b = None
         self.operation = None
         self.set_flags()
-    
+
     def calc(self):
         tmp_result = None
         if self.operation == ALU_Opcode.INC_A:
@@ -48,21 +68,21 @@ class ALU:
         else:
             raise f"Unknown ALU operation: {self.operation}"
         self.set_flags(tmp_result)
-    
-    def set_flags(self, tmp_result = None):
+
+    def set_flags(self, tmp_result=None):
         if tmp_result is None:
             self.n_flag = self.result < 0
             self.z_flag = self.result == 0
         else:
             self.n_flag = tmp_result < 0
             self.z_flag = tmp_result == 0
-    
+
     def set_details(self, src_a, src_b, operation):
         assert operation in self.alu_operations, f"Unknown ALU operation: {operation}"
         self.src_a = src_a
         self.src_b = src_b
         self.operation = operation
-    
+
 
 class DataPath:
     memory_size = None
@@ -73,25 +93,25 @@ class DataPath:
 
     addr = None
     "Регистр адреса. Инициализируется нулём."
-    
+
     to_mem = None
     "Регистр записи в память. Инициализируется нулём."
-    
+
     ir = None
     "Регистр инструкции. Инициализируется NOP'ом."
 
     dr = None
     "Регистр данных. Инициализируется нулём."
-    
+
     pc = None
     "Регистр адреса следующей команды. Инициализируется нулём."
-    
+
     sp = None
     "Регистр стека. Инициализируется нулём."
-    
+
     ps = None
     "Регистр статуса программы. Инициализируется флагами АЛУ. Прерывания запрещены"
-    
+
     ac = None
     "Аккумулятор. Инициализируется нулём."
 
@@ -100,10 +120,10 @@ class DataPath:
 
     output_symbol_buffer = None
     "Буфер выходных символов. Инициализируется пустым массивом"
-    
+
     output_numeric_buffer = None
     "Буфер выходных цифр. Инициализируется пустым массивом"
-    
+
     alu = None
     "АЛУ"
 
@@ -111,10 +131,10 @@ class DataPath:
         assert memory_size > 0, "memory size should be greater than zero"
         self.alu = ALU()
         self.memory_size = memory_size
-        self.memory = [{"opcode" : Opcode.NOP.value}] * memory_size
+        self.memory = [{"opcode": Opcode.NOP.value}] * memory_size
         self.addr = 0
         self.to_mem = 0
-        self.ir = {"opcode" : Opcode.NOP.value}
+        self.ir = {"opcode": Opcode.NOP.value}
         self.dr = 0
         self.pc = 0
         self.sp = 0
@@ -123,57 +143,57 @@ class DataPath:
         self.input_buffer = input_buffer
         self.output_symbol_buffer = []
         self.output_numeric_buffer = []
-      
+
     def signal_fill_memory(self, program):
         for mem_cell in program:
-            index = mem_cell['index']
+            index = mem_cell["index"]
             self.memory[index] = mem_cell
-      
+
     def signal_latch_addr(self):
         self.addr = self.alu.result
-    
+
     def signal_latch_to_mem(self):
         self.to_mem = self.alu.result
-    
+
     def signal_latch_ir(self):
         assert self.addr >= 0 and self.addr <= self.memory_size, f"Can't read out of memory!"
         self.ir = self.memory[self.addr]
-    
+
     def signal_latch_dr(self):
         assert self.addr >= 0 and self.addr <= self.memory_size, f"Can't read out of memory!"
-        self.dr = self.memory[self.addr]['value']
-        
+        self.dr = self.memory[self.addr]["value"]
+
     def signal_latch_pc(self):
         self.pc = self.alu.result % self.memory_size
-        
+
     def signal_latch_sp(self):
         self.sp = self.alu.result % self.memory_size
-        
+
     def signal_latch_ps_flags(self):
-        self.ps['N'] = self.alu.n_flag
-        self.ps['Z'] = self.alu.z_flag
-    
+        self.ps["N"] = self.alu.n_flag
+        self.ps["Z"] = self.alu.z_flag
+
     def signal_latch_ps(self):
         self.alu.n_flag = True if int(self.alu.result / 100) == 1 else False
         self.alu.z_flag = True if int((self.alu.result / 10) % 10) == 1 else False
-        self.ps['INT_EN'] = True if self.alu.result % 10 == 1 else False
-        
+        self.ps["INT_EN"] = True if self.alu.result % 10 == 1 else False
+
     def signal_enable_interrupts(self):
-        self.ps['INT_EN'] = True
-        
+        self.ps["INT_EN"] = True
+
     def signal_disable_interrupts(self):
-        self.ps['INT_EN'] = False
-        
+        self.ps["INT_EN"] = False
+
     def signal_latch_ac(self, sel):
         assert sel in {Selectors.FROM_INPUT, Selectors.FROM_ALU}, f"Unknown selector '{sel}'"
         if sel == Selectors.FROM_ALU:
             self.ac = self.alu.result
         else:
-            symbol = self.input_buffer.pop(0)['symbol']
+            symbol = self.input_buffer.pop(0)["symbol"]
             symbol_code = ord(symbol)
             self.ac = symbol_code
             logging.debug("input: %s", repr(symbol))
-        
+
     def signal_output(self):
         port_num = self.dr
         if port_num == 1:
@@ -184,85 +204,94 @@ class DataPath:
             symbol = self.ac
             logging.debug("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
             self.output_numeric_buffer.append(symbol)
-        
+
     def signal_wr(self):
-        self.memory[self.addr] = {"index" : self.addr, "opcode": Opcode.NOP.value, "value": self.to_mem, "is_indirect": False}
-    
-    def signal_execute_alu_op(self, operation, left_sel = None, right_sel = None):
+        self.memory[self.addr] = {
+            "index": self.addr,
+            "opcode": Opcode.NOP.value,
+            "value": self.to_mem,
+            "is_indirect": False,
+        }
+
+    def signal_execute_alu_op(self, operation, left_sel=None, right_sel=None):
         src_a = None
         src_b = None
-        
-        if not(left_sel is None):
+
+        if not (left_sel is None):
             assert left_sel in {Selectors.FROM_AC, Selectors.FROM_PS}, f"Unknown left selector '{right_sel}'"
             if left_sel == Selectors.FROM_AC:
                 src_a = self.ac
             else:
-                n = 1 if self.ps['N'] else 0
-                z = 1 if self.ps['Z'] else 0
-                int_en = 1 if self.ps['INT_EN'] else 0
+                n = 1 if self.ps["N"] else 0
+                z = 1 if self.ps["Z"] else 0
+                int_en = 1 if self.ps["INT_EN"] else 0
                 src_a = n * 100 + z * 10 + int_en
-            
-        if not(right_sel is None):
-            assert right_sel in {Selectors.FROM_DR, Selectors.FROM_PC, Selectors.FROM_SP}, f"Unknown right selector '{right_sel}'"
+
+        if not (right_sel is None):
+            assert right_sel in {
+                Selectors.FROM_DR,
+                Selectors.FROM_PC,
+                Selectors.FROM_SP,
+            }, f"Unknown right selector '{right_sel}'"
             if right_sel == Selectors.FROM_DR:
                 src_b = self.dr
             elif right_sel == Selectors.FROM_PC:
                 src_b = self.pc
             else:
                 src_b = self.sp
-            
+
         self.alu.set_details(src_a, src_b, operation)
         self.alu.calc()
 
+
 class ControlUnit:
-    
     data_path = None
-    
+
     instruction_counter = None
-    
+
     _tick = None
-    
+
     mode = None
-    
-    def __init__(self, program, data_path : DataPath):
+
+    def __init__(self, program, data_path: DataPath):
         self.mode = Program_Mode.NORMAL
         self.instruction_counter = 0
         self.data_path = data_path
         self._tick = 0
         data_path.signal_fill_memory(program)
-        
+
     def tick(self):
         self._tick += 1
 
     def current_tick(self):
         return self._tick
-    
+
     def instr_fetch(self):
         self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_PC)
         self.data_path.signal_latch_addr()
         self.tick()
-        
+
         self.data_path.signal_execute_alu_op(ALU_Opcode.INC_B, right_sel=Selectors.FROM_PC)
         self.data_path.signal_latch_pc()
         self.data_path.signal_latch_ir()
         self.data_path.signal_latch_dr()
         self.tick()
-    
+
     def execute(self):
         ir, ps = self.data_path.ir, self.data_path.ps
-        opcode, is_indirect = ir['opcode'], ir['is_indirect']
-        
+        opcode, is_indirect = ir["opcode"], ir["is_indirect"]
+
         if opcode == Opcode.NOP:
             self.tick()
             return
-        
+
         if is_indirect:
             self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
             self.tick()
-        
+
         if opcode in nullar_instructions:
             self.execute_nullar(opcode)
         elif opcode in onear_instructions:
@@ -331,8 +360,7 @@ class ControlUnit:
             self.data_path.signal_latch_ps()
             self.tick()
             self.mode = Program_Mode.NORMAL
-            
-    
+
     def execute_onear(self, opcode):
         if opcode == Opcode.LOAD:
             self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
@@ -355,7 +383,9 @@ class ControlUnit:
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(
+                ALU_Opcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+            )
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.CMP:
@@ -363,14 +393,18 @@ class ControlUnit:
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(
+                ALU_Opcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+            )
             self.tick()
         elif opcode == Opcode.TEST:
             self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.TEST, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(
+                ALU_Opcode.TEST, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+            )
             self.tick()
         elif opcode == Opcode.OUT:
             self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
@@ -382,30 +416,29 @@ class ControlUnit:
         elif opcode == Opcode.IN:
             self.data_path.signal_latch_ac(Selectors.FROM_INPUT)
             self.tick()
-        
-    
+
     def execute_branch(self, opcode, ps):
         if opcode == Opcode.JG:
-            if not ps['N']:
+            if not ps["N"]:
                 self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
-                self.data_path.signal_latch_pc() 
-        
+                self.data_path.signal_latch_pc()
+
         elif opcode == Opcode.JZ:
-            if ps['Z']:
+            if ps["Z"]:
                 self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
-                self.data_path.signal_latch_pc() 
-        
+                self.data_path.signal_latch_pc()
+
         elif opcode == Opcode.JNZ:
-            if not ps['Z']:
+            if not ps["Z"]:
                 self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
-                self.data_path.signal_latch_pc() 
-        
+                self.data_path.signal_latch_pc()
+
         elif opcode == Opcode.JMP:
             self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
-            self.data_path.signal_latch_pc() 
-        
+            self.data_path.signal_latch_pc()
+
         self.tick()
-        
+
     def go_to_interrupt(self):
         #  Сохраняем на стеке PS и PC
         self.data_path.signal_execute_alu_op(ALU_Opcode.DEC_B, right_sel=Selectors.FROM_SP)
@@ -432,43 +465,43 @@ class ControlUnit:
         self.data_path.signal_latch_dr()
         self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
         self.data_path.signal_latch_pc()
-       
+
     def check_for_interruptions(self, enabled=False):
         position = 0
         for index, val in enumerate(self.data_path.input_buffer):
-            if val['tick'] > self.current_tick():
+            if val["tick"] > self.current_tick():
                 position = index
                 break
-        self.data_path.input_buffer = self.data_path.input_buffer[0 if position == 0 else position - 1:]
+        self.data_path.input_buffer = self.data_path.input_buffer[0 if position == 0 else position - 1 :]
         if not self.data_path.input_buffer:
             return
         schedule = self.data_path.input_buffer[0]
-        if not enabled or self.current_tick() < schedule['tick']:
+        if not enabled or self.current_tick() < schedule["tick"]:
             return
         self.mode = Program_Mode.INTERRUPT
         self.go_to_interrupt()
-        
+
     def decode_and_execute_instruction(self):
         self.instr_fetch()
         self.execute()
         self.data_path.signal_latch_ps_flags()
-        self.check_for_interruptions(self.data_path.ps['INT_EN'])
-    
+        self.check_for_interruptions(self.data_path.ps["INT_EN"])
+
     def __repr__(self):
         return "TICK: {:4} | AC: {:4} | PC: {:3} | IR: {:5} | DR: {:7} | SP: {:3} | Addr: {:3} | ToMem: {:7} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:7} | mode: {}".format(
             self.current_tick(),
             self.data_path.ac,
             self.data_path.pc,
-            self.data_path.ir['opcode'],
+            self.data_path.ir["opcode"],
             self.data_path.dr,
             self.data_path.sp,
             self.data_path.addr,
             self.data_path.to_mem,
-            (1 if self.data_path.ps['N'] else 0),
-            (1 if self.data_path.ps['Z'] else 0),
-            (1 if self.data_path.ps['INT_EN'] else 0),
-            self.data_path.memory[self.data_path.addr]['value'],
-            self.mode
+            (1 if self.data_path.ps["N"] else 0),
+            (1 if self.data_path.ps["Z"] else 0),
+            (1 if self.data_path.ps["INT_EN"] else 0),
+            self.data_path.memory[self.data_path.addr]["value"],
+            self.mode,
         )
 
 
@@ -476,7 +509,7 @@ def simulation(code, input_tokens, memory_size, limit):
     data_path = DataPath(memory_size, input_tokens)
     control_unit = ControlUnit(code, data_path)
     instr_counter = 0
-    
+
     logging.debug("%s", control_unit)
     try:
         while instr_counter < limit:
@@ -494,6 +527,7 @@ def simulation(code, input_tokens, memory_size, limit):
     numbers = data_path.output_numeric_buffer
     return symbols, numbers, instr_counter, control_unit.current_tick()
 
+
 def parse_to_tokens(input_file):
     tokens = []
     with open(input_file, encoding="utf-8") as file:
@@ -502,16 +536,17 @@ def parse_to_tokens(input_file):
             input_token = []
         else:
             input_token = eval(input_text)
-    
+
     if len(input_token) > 0:
         for tick, symbol in input_token:
-            tokens.append({"tick" : tick, "symbol": symbol})
+            tokens.append({"tick": tick, "symbol": symbol})
     return tokens
+
 
 def main(code_file, input_file):
     code = read_code(code_file)
     input_token = parse_to_tokens(input_file)
-    
+
     output_symbols, output_numbers, instr_counter, ticks = simulation(
         code,
         input_tokens=input_token,

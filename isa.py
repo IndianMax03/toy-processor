@@ -2,12 +2,14 @@ import json
 from enum import Enum
 from dataclasses import dataclass
 
+
 class Program_Mode(str, Enum):
     NORMAL = "normal"
     INTERRUPT = "interrupt"
-    
+
     def __str__(self) -> str:
         return str(self.value)
+
 
 class ALU_Opcode(str, Enum):
     INC_A = "inc_a"
@@ -19,14 +21,14 @@ class ALU_Opcode(str, Enum):
     TEST = "test"
     SKIP_A = "skip_a"
     SKIP_B = "skip_b"
-    
+
     def __str__(self) -> str:
         return str(self.value)
 
+
 class Opcode(str, Enum):
-    
     NOP = "nop"
-    
+
     INC = "inc"
     DEC = "dec"
     HALT = "halt"
@@ -35,7 +37,7 @@ class Opcode(str, Enum):
     PUSH = "push"
     POP = "pop"
     IRET = "iret"
-    
+
     LOAD = "load"
     STORE = "store"
     ADD = "add"
@@ -43,15 +45,16 @@ class Opcode(str, Enum):
     IN = "in"
     CMP = "cmp"
     TEST = "test"
-    
+
     JG = "jg"
     JZ = "jz"
     JNZ = "jnz"
     JMP = "jmp"
-    
+
     def __str__(self) -> str:
         return str(self.value)
-    
+
+
 class Selectors(str, Enum):
     FROM_INPUT = "from_input"
     FROM_ALU = "from_alu"
@@ -60,9 +63,10 @@ class Selectors(str, Enum):
     FROM_SP = "from_sp"
     FROM_AC = "from_ac"
     FROM_PS = "from_ps"
-    
+
     def __str__(self) -> str:
         return str(self.value)
+
 
 nullar_instructions = [Opcode.INC, Opcode.DEC, Opcode.HALT, Opcode.EI, Opcode.DI, Opcode.PUSH, Opcode.POP, Opcode.IRET]
 
@@ -70,9 +74,10 @@ branch_instructions = [Opcode.JG, Opcode.JZ, Opcode.JNZ, Opcode.JMP]
 
 onear_instructions = [Opcode.LOAD, Opcode.STORE, Opcode.ADD, Opcode.OUT, Opcode.IN, Opcode.CMP, Opcode.TEST]
 
-pseudo_commands = ['org']
+pseudo_commands = ["org"]
 
-data_types = ['.word']
+data_types = [".word"]
+
 
 def write_code(filename, code):
     with open(filename, "w", encoding="utf-8") as file:
@@ -80,6 +85,7 @@ def write_code(filename, code):
         for instr in code:
             buf.append(json.dumps(instr))
         file.write("[" + ",\n ".join(buf) + "]")
+
 
 def read_code(filename):
     with open(filename, encoding="utf-8") as file:
