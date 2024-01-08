@@ -98,8 +98,11 @@ class DataPath:
     input_buffer = None
     "Буфер входных данных. Инициализируется входными данными конструктора."
 
-    output_buffer = None
-    "Буфер выходных данных. Инициализируется пустым массивом"
+    output_symbol_buffer = None
+    "Буфер выходных символов. Инициализируется пустым массивом"
+    
+    output_numeric_buffer = None
+    "Буфер выходных цифр. Инициализируется пустым массивом"
     
     alu = None
     "АЛУ"
@@ -118,7 +121,8 @@ class DataPath:
         self.ps = {"N": self.alu.n_flag, "Z": self.alu.z_flag, "INT_EN": False}
         self.ac = 0
         self.input_buffer = input_buffer
-        self.output_buffer = []
+        self.output_symbol_buffer = []
+        self.output_numeric_buffer = []
       
     def signal_fill_memory(self, program):
         for mem_cell in program:
@@ -168,9 +172,15 @@ class DataPath:
             self.ac = ord(self.input_buffer.pop(0)['symbol'])
         
     def signal_output(self):
-        symbol = chr(self.ac)
-        logging.info("output: %s << %s", repr("".join(self.output_buffer)), repr(symbol))
-        self.output_buffer.append(symbol)
+        port_num = self.dr
+        if port_num == 1:
+            symbol = chr(self.ac)
+            logging.info("output_symbol_buffer: %s << %s", repr("".join(self.output_symbol_buffer)), repr(symbol))
+            self.output_symbol_buffer.append(symbol)
+        elif port_num == 2:
+            symbol = self.ac
+            logging.info("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
+            self.output_numeric_buffer.append(symbol)
         
     def signal_wr(self):
         self.memory[self.addr] = {"index" : self.addr, "opcode": Opcode.NOP.value, "value": self.to_mem, "is_indirect": False}
@@ -360,6 +370,10 @@ class ControlUnit:
             self.data_path.signal_execute_alu_op(ALU_Opcode.TEST, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
             self.tick()
         elif opcode == Opcode.OUT:
+            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_latch_addr()
+            self.tick()
+            self.data_path.signal_latch_dr()
             self.data_path.signal_output()
             self.tick()
         elif opcode == Opcode.IN:
@@ -438,7 +452,7 @@ class ControlUnit:
         self.check_for_interruptions(self.data_path.ps['INT_EN'])
     
     def __repr__(self):
-        return "TICK: {:3} | AC: {:3} | PC: {:3} | IR: {:5} | DR: {:3} | SP: {:3} | Addr: {:3} | ToMem: {:3} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:3} | mode: {}".format(
+        return "TICK: {:3} | AC: {:3} | PC: {:3} | IR: {:5} | DR: {:6} | SP: {:3} | Addr: {:3} | ToMem: {:6} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:6} | mode: {}".format(
             self.current_tick(),
             self.data_path.ac,
             self.data_path.pc,
@@ -471,8 +485,11 @@ def simulation(code, input_tokens, memory_size, limit):
 
     if instr_counter >= limit:
         logging.warning("Limit exceeded!")
-    logging.info("output_buffer: %s", repr("".join(data_path.output_buffer)))
-    return "".join(data_path.output_buffer), instr_counter, control_unit.current_tick()
+    logging.info("output_symbol_buffer: %s", repr("".join(data_path.output_symbol_buffer)))
+    logging.info("output_numeric_buffer: [%s]", ", ".join(str(x) for x in data_path.output_numeric_buffer))
+    symbols = data_path.output_symbol_buffer
+    numbers = data_path.output_numeric_buffer
+    return symbols, numbers, instr_counter, control_unit.current_tick()
 
 def parse_to_tokens(input_file):
     tokens = []
@@ -492,14 +509,15 @@ def main(code_file, input_file):
     code = read_code(code_file)
     input_token = parse_to_tokens(input_file)
     
-    output, instr_counter, ticks = simulation(
+    output_symbols, output_numbers, instr_counter, ticks = simulation(
         code,
         input_tokens=input_token,
         memory_size=200,
         limit=5000,
     )
 
-    print("".join(output))
+    # print("".join(output_symbols))
+    # print("".join(output_numbers))
     print("instr_counter: ", instr_counter, "ticks:", ticks)
 
 
