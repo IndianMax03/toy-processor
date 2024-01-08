@@ -175,11 +175,11 @@ class DataPath:
         port_num = self.dr
         if port_num == 1:
             symbol = chr(self.ac)
-            logging.info("output_symbol_buffer: %s << %s", repr("".join(self.output_symbol_buffer)), repr(symbol))
+            # logging.info("output_symbol_buffer: %s << %s", repr("".join(self.output_symbol_buffer)), repr(symbol))
             self.output_symbol_buffer.append(symbol)
         elif port_num == 2:
             symbol = self.ac
-            logging.info("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
+            # logging.info("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
             self.output_numeric_buffer.append(symbol)
         
     def signal_wr(self):
@@ -473,7 +473,7 @@ def simulation(code, input_tokens, memory_size, limit):
     data_path = DataPath(memory_size, input_tokens)
     control_unit = ControlUnit(code, data_path)
     instr_counter = 0
-
+    
     logging.info("%s", control_unit)
     try:
         while instr_counter < limit:
