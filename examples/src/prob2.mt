@@ -12,7 +12,7 @@ tmp:
 result:
     .word 0
 out_port:
-    .word 1
+    .word 2
 
 _start:
     load cur
