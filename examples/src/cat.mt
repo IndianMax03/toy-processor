@@ -21,7 +21,6 @@ _start:
 
 interrupt:
     di
-    push
     in in_port
     out out_port
     cmp line_feed
@@ -30,6 +29,4 @@ interrupt:
     inc
     store flag
     returning:
-        pop
-        ei
         iret

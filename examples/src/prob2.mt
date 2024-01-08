@@ -1,6 +1,8 @@
 org 10
 limit:
     .word 4000000
+odd:
+    .word 1
 prev:
     .word 1
 cur:
@@ -16,7 +18,7 @@ _start:
     load cur
     cmp limit
     jg end
-    test 1
+    test odd
     jnz finally
     if_even:
         load result

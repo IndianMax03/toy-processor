@@ -12,7 +12,7 @@ greeting:
 greeting_pointer:
     .word greeting
 exclamation:
-    .word 1, '!'
+    .word 1, 33
 exclamation_pointer:
     .word exclamation
 cycles:
@@ -25,6 +25,8 @@ flag:
     .word 0
 line_feed:
     .word 10
+tmp:
+    .word 0
 
 _start:
     ; вывод вопрошающего сообщения
@@ -46,6 +48,7 @@ _start:
         load flag
         jz spin_loop
     ; вывод приветствия
+    di
     load greeting
     store cycles
     greeting_loop:
@@ -59,10 +62,14 @@ _start:
         store cycles
         jnz greeting_loop
     load buffer_len
+    dec
     store cycles
     name_loop:
-        load (buffer_pointer)
+        load (buffer_start_pointer)
         out out_port
+        load buffer_start_pointer
+        inc
+        store buffer_start_pointer
         load cycles
         dec
         store cycles
@@ -70,6 +77,7 @@ _start:
     exclamation_printing:
         load exclamation_pointer
         inc
+        store exclamation_pointer
         load (exclamation_pointer)
         out out_port
     halt
@@ -77,28 +85,28 @@ _start:
 
 interrupt:
     di ; запрет вложенных прерываний
-    push ; сохранение аккумулятора
     in in_port ; получение слова из порта ввода
-    store (buffer_pointer) ; сохранение в буфер
-    load buffer_pointer ; сдвиг указателя
-    inc
-    store buffer_pointer
-    load buffer_len ; увеличение длины
-    inc
-    store buffer_len
     cmp line_feed
-    jnz returning
+    jnz continue
     load flag
     inc
     store flag
-    returning:
-        pop
-        ei
-        iret
+    continue:
+        store (buffer_pointer) ; сохранение в буфер
+        load buffer_pointer ; сдвиг указателя
+        inc
+        store buffer_pointer
+        load buffer_len ; увеличение длины
+        inc
+        store buffer_len
+        returning:
+            iret
 
 buffer_len:
     .word 0
 buffer_pointer:
+    .word buffer
+buffer_start_pointer:
     .word buffer
 buffer:
     .word 0
