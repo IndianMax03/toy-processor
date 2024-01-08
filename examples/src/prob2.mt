@@ -33,6 +33,6 @@ _start:
         store prev
     jmp _start
     end:
-        load limit
+        load result
         out out_port
     halt
