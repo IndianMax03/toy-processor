@@ -1,0 +1,710 @@
+in_source: |-
+  org 1
+  vector:
+      .word interrupt
+
+  org 10
+  message:
+      .word 18, 'What is your name?'
+  message_pointer:
+      .word message
+  greeting:
+      .word 7, 'Hello, '
+  greeting_pointer:
+      .word greeting
+  exclamation:
+      .word 1, 33
+  exclamation_pointer:
+      .word exclamation
+  cycles:
+      .word 0
+  in_port:
+      .word 0
+  out_port:
+      .word 1
+  flag:
+      .word 0
+  line_feed:
+      .word 10
+  tmp:
+      .word 0
+
+  _start:
+      ; вывод вопрошающего сообщения
+      load message
+      store cycles
+      message_loop:
+          load message_pointer
+          inc
+          store message_pointer
+          load (message_pointer)
+          out out_port
+          load cycles
+          dec
+          store cycles
+          jnz message_loop
+      ; ожидание ввода
+      ei
+      spin_loop:
+          load flag
+          jz spin_loop
+      ; вывод приветствия
+      di
+      load greeting
+      store cycles
+      greeting_loop:
+          load greeting_pointer
+          inc
+          store greeting_pointer
+          load (greeting_pointer)
+          out out_port
+          load cycles
+          dec
+          store cycles
+          jnz greeting_loop
+      load buffer_len
+      dec
+      store cycles
+      name_loop:
+          load (buffer_start_pointer)
+          out out_port
+          load buffer_start_pointer
+          inc
+          store buffer_start_pointer
+          load cycles
+          dec
+          store cycles
+          jnz name_loop
+      exclamation_printing:
+          load exclamation_pointer
+          inc
+          store exclamation_pointer
+          load (exclamation_pointer)
+          out out_port
+      halt
+      
+
+  interrupt:
+      di ; запрет вложенных прерываний
+      in in_port ; получение слова из порта ввода
+      cmp line_feed
+      jnz continue
+      load flag
+      inc
+      store flag
+      continue:
+          store (buffer_pointer) ; сохранение в буфер
+          load buffer_pointer ; сдвиг указателя
+          inc
+          store buffer_pointer
+          load buffer_len ; увеличение длины
+          inc
+          store buffer_len
+          returning:
+              iret
+
+  buffer_len:
+      .word 0
+  buffer_pointer:
+      .word buffer
+  buffer_start_pointer:
+      .word buffer
+  buffer:
+      .word 0
+in_stdin: |
+  [(700, 'M'), (800, 'a'), (900, 'x'),  (1000, 'i'), (1100, 'm'), (1200, '\n')]
+out_code: |-
+  [{"index": 0, "opcode": "jmp", "value": 48, "is_indirect": false},
+   {"index": 1, "opcode": "nop", "value": 92, "is_indirect": false},
+   {"index": 10, "opcode": "nop", "value": 18, "is_indirect": false},
+   {"index": 11, "opcode": "nop", "value": 87, "is_indirect": false},
+   {"index": 12, "opcode": "nop", "value": 104, "is_indirect": false},
+   {"index": 13, "opcode": "nop", "value": 97, "is_indirect": false},
+   {"index": 14, "opcode": "nop", "value": 116, "is_indirect": false},
+   {"index": 15, "opcode": "nop", "value": 32, "is_indirect": false},
+   {"index": 16, "opcode": "nop", "value": 105, "is_indirect": false},
+   {"index": 17, "opcode": "nop", "value": 115, "is_indirect": false},
+   {"index": 18, "opcode": "nop", "value": 32, "is_indirect": false},
+   {"index": 19, "opcode": "nop", "value": 121, "is_indirect": false},
+   {"index": 20, "opcode": "nop", "value": 111, "is_indirect": false},
+   {"index": 21, "opcode": "nop", "value": 117, "is_indirect": false},
+   {"index": 22, "opcode": "nop", "value": 114, "is_indirect": false},
+   {"index": 23, "opcode": "nop", "value": 32, "is_indirect": false},
+   {"index": 24, "opcode": "nop", "value": 110, "is_indirect": false},
+   {"index": 25, "opcode": "nop", "value": 97, "is_indirect": false},
+   {"index": 26, "opcode": "nop", "value": 109, "is_indirect": false},
+   {"index": 27, "opcode": "nop", "value": 101, "is_indirect": false},
+   {"index": 28, "opcode": "nop", "value": 63, "is_indirect": false},
+   {"index": 29, "opcode": "nop", "value": 10, "is_indirect": false},
+   {"index": 30, "opcode": "nop", "value": 7, "is_indirect": false},
+   {"index": 31, "opcode": "nop", "value": 72, "is_indirect": false},
+   {"index": 32, "opcode": "nop", "value": 101, "is_indirect": false},
+   {"index": 33, "opcode": "nop", "value": 108, "is_indirect": false},
+   {"index": 34, "opcode": "nop", "value": 108, "is_indirect": false},
+   {"index": 35, "opcode": "nop", "value": 111, "is_indirect": false},
+   {"index": 36, "opcode": "nop", "value": 44, "is_indirect": false},
+   {"index": 37, "opcode": "nop", "value": 32, "is_indirect": false},
+   {"index": 38, "opcode": "nop", "value": 30, "is_indirect": false},
+   {"index": 39, "opcode": "nop", "value": 1, "is_indirect": false},
+   {"index": 40, "opcode": "nop", "value": 33, "is_indirect": false},
+   {"index": 41, "opcode": "nop", "value": 39, "is_indirect": false},
+   {"index": 42, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 43, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 44, "opcode": "nop", "value": 1, "is_indirect": false},
+   {"index": 45, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 46, "opcode": "nop", "value": 10, "is_indirect": false},
+   {"index": 47, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 48, "opcode": "load", "value": 10, "is_indirect": false},
+   {"index": 49, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 50, "opcode": "load", "value": 29, "is_indirect": false},
+   {"index": 51, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 52, "opcode": "store", "value": 29, "is_indirect": false},
+   {"index": 53, "opcode": "load", "value": 29, "is_indirect": true},
+   {"index": 54, "opcode": "out", "value": 44, "is_indirect": false},
+   {"index": 55, "opcode": "load", "value": 42, "is_indirect": false},
+   {"index": 56, "opcode": "dec", "value": 0, "is_indirect": false},
+   {"index": 57, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 58, "opcode": "jnz", "value": 50, "is_indirect": false},
+   {"index": 59, "opcode": "ei", "value": 0, "is_indirect": false},
+   {"index": 60, "opcode": "load", "value": 45, "is_indirect": false},
+   {"index": 61, "opcode": "jz", "value": 60, "is_indirect": false},
+   {"index": 62, "opcode": "di", "value": 0, "is_indirect": false},
+   {"index": 63, "opcode": "load", "value": 30, "is_indirect": false},
+   {"index": 64, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 65, "opcode": "load", "value": 38, "is_indirect": false},
+   {"index": 66, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 67, "opcode": "store", "value": 38, "is_indirect": false},
+   {"index": 68, "opcode": "load", "value": 38, "is_indirect": true},
+   {"index": 69, "opcode": "out", "value": 44, "is_indirect": false},
+   {"index": 70, "opcode": "load", "value": 42, "is_indirect": false},
+   {"index": 71, "opcode": "dec", "value": 0, "is_indirect": false},
+   {"index": 72, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 73, "opcode": "jnz", "value": 65, "is_indirect": false},
+   {"index": 74, "opcode": "load", "value": 107, "is_indirect": false},
+   {"index": 75, "opcode": "dec", "value": 0, "is_indirect": false},
+   {"index": 76, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 77, "opcode": "load", "value": 109, "is_indirect": true},
+   {"index": 78, "opcode": "out", "value": 44, "is_indirect": false},
+   {"index": 79, "opcode": "load", "value": 109, "is_indirect": false},
+   {"index": 80, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 81, "opcode": "store", "value": 109, "is_indirect": false},
+   {"index": 82, "opcode": "load", "value": 42, "is_indirect": false},
+   {"index": 83, "opcode": "dec", "value": 0, "is_indirect": false},
+   {"index": 84, "opcode": "store", "value": 42, "is_indirect": false},
+   {"index": 85, "opcode": "jnz", "value": 77, "is_indirect": false},
+   {"index": 86, "opcode": "load", "value": 41, "is_indirect": false},
+   {"index": 87, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 88, "opcode": "store", "value": 41, "is_indirect": false},
+   {"index": 89, "opcode": "load", "value": 41, "is_indirect": true},
+   {"index": 90, "opcode": "out", "value": 44, "is_indirect": false},
+   {"index": 91, "opcode": "halt", "value": 0, "is_indirect": false},
+   {"index": 92, "opcode": "di", "value": 0, "is_indirect": false},
+   {"index": 93, "opcode": "in", "value": 43, "is_indirect": false},
+   {"index": 94, "opcode": "cmp", "value": 46, "is_indirect": false},
+   {"index": 95, "opcode": "jnz", "value": 99, "is_indirect": false},
+   {"index": 96, "opcode": "load", "value": 45, "is_indirect": false},
+   {"index": 97, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 98, "opcode": "store", "value": 45, "is_indirect": false},
+   {"index": 99, "opcode": "store", "value": 108, "is_indirect": true},
+   {"index": 100, "opcode": "load", "value": 108, "is_indirect": false},
+   {"index": 101, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 102, "opcode": "store", "value": 108, "is_indirect": false},
+   {"index": 103, "opcode": "load", "value": 107, "is_indirect": false},
+   {"index": 104, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 105, "opcode": "store", "value": 107, "is_indirect": false},
+   {"index": 106, "opcode": "iret", "value": 0, "is_indirect": false},
+   {"index": 107, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 108, "opcode": "nop", "value": 110, "is_indirect": false},
+   {"index": 109, "opcode": "nop", "value": 110, "is_indirect": false},
+   {"index": 110, "opcode": "nop", "value": 0, "is_indirect": false}]
+out_stdout: |
+  source LoC: 112 code instr: 103
+  ============================================================
+  What is your name?Hello, Maxim!
+  []
+  instr_counter:  444 ticks: 1738
+out_log: |
+  DEBUG   machine:simulation    TICK:    0 | AC:    0 | PC:   0 | IR: nop   | DR:       0 | SP:   0 | Addr:   0 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:      48 | mode: normal
+  DEBUG   machine:simulation    TICK:    3 | AC:    0 | PC:  48 | IR: jmp   | DR:      48 | SP:   0 | Addr:   0 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      48 | mode: normal
+  DEBUG   machine:simulation    TICK:    7 | AC:   18 | PC:  49 | IR: load  | DR:      18 | SP:   0 | Addr:  10 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      18 | mode: normal
+  DEBUG   machine:simulation    TICK:   11 | AC:   18 | PC:  50 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      18 | mode: normal
+  DEBUG   machine:simulation    TICK:   15 | AC:   10 | PC:  51 | IR: load  | DR:      10 | SP:   0 | Addr:  29 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: normal
+  DEBUG   machine:simulation    TICK:   18 | AC:   11 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   22 | AC:   11 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:   28 | AC:   87 | PC:  54 | IR: load  | DR:      87 | SP:   0 | Addr:  11 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      87 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: '' << 'W'
+  DEBUG   machine:simulation    TICK:   32 | AC:   87 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:   36 | AC:   18 | PC:  56 | IR: load  | DR:      18 | SP:   0 | Addr:  42 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      18 | mode: normal
+  DEBUG   machine:simulation    TICK:   39 | AC:   17 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   43 | AC:   17 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      17 | mode: normal
+  DEBUG   machine:simulation    TICK:   46 | AC:   17 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:   50 | AC:   11 | PC:  51 | IR: load  | DR:      11 | SP:   0 | Addr:  29 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:   53 | AC:   12 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   57 | AC:   12 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      12 | mode: normal
+  DEBUG   machine:simulation    TICK:   63 | AC:  104 | PC:  54 | IR: load  | DR:     104 | SP:   0 | Addr:  12 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     104 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'W' << 'h'
+  DEBUG   machine:simulation    TICK:   67 | AC:  104 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:   71 | AC:   17 | PC:  56 | IR: load  | DR:      17 | SP:   0 | Addr:  42 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      17 | mode: normal
+  DEBUG   machine:simulation    TICK:   74 | AC:   16 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   78 | AC:   16 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      16 | mode: normal
+  DEBUG   machine:simulation    TICK:   81 | AC:   16 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:   85 | AC:   12 | PC:  51 | IR: load  | DR:      12 | SP:   0 | Addr:  29 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      12 | mode: normal
+  DEBUG   machine:simulation    TICK:   88 | AC:   13 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   92 | AC:   13 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      13 | mode: normal
+  DEBUG   machine:simulation    TICK:   98 | AC:   97 | PC:  54 | IR: load  | DR:      97 | SP:   0 | Addr:  13 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      97 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'Wh' << 'a'
+  DEBUG   machine:simulation    TICK:  102 | AC:   97 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  106 | AC:   16 | PC:  56 | IR: load  | DR:      16 | SP:   0 | Addr:  42 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      16 | mode: normal
+  DEBUG   machine:simulation    TICK:  109 | AC:   15 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  113 | AC:   15 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      15 | mode: normal
+  DEBUG   machine:simulation    TICK:  116 | AC:   15 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  120 | AC:   13 | PC:  51 | IR: load  | DR:      13 | SP:   0 | Addr:  29 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      13 | mode: normal
+  DEBUG   machine:simulation    TICK:  123 | AC:   14 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  127 | AC:   14 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:  133 | AC:  116 | PC:  54 | IR: load  | DR:     116 | SP:   0 | Addr:  14 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     116 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'Wha' << 't'
+  DEBUG   machine:simulation    TICK:  137 | AC:  116 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  141 | AC:   15 | PC:  56 | IR: load  | DR:      15 | SP:   0 | Addr:  42 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      15 | mode: normal
+  DEBUG   machine:simulation    TICK:  144 | AC:   14 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  148 | AC:   14 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:  151 | AC:   14 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  155 | AC:   14 | PC:  51 | IR: load  | DR:      14 | SP:   0 | Addr:  29 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:  158 | AC:   15 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      14 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  162 | AC:   15 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      15 | mode: normal
+  DEBUG   machine:simulation    TICK:  168 | AC:   32 | PC:  54 | IR: load  | DR:      32 | SP:   0 | Addr:  15 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What' << ' '
+  DEBUG   machine:simulation    TICK:  172 | AC:   32 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  176 | AC:   14 | PC:  56 | IR: load  | DR:      14 | SP:   0 | Addr:  42 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:  179 | AC:   13 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  183 | AC:   13 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      13 | mode: normal
+  DEBUG   machine:simulation    TICK:  186 | AC:   13 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  190 | AC:   15 | PC:  51 | IR: load  | DR:      15 | SP:   0 | Addr:  29 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      15 | mode: normal
+  DEBUG   machine:simulation    TICK:  193 | AC:   16 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      13 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  197 | AC:   16 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      16 | mode: normal
+  DEBUG   machine:simulation    TICK:  203 | AC:  105 | PC:  54 | IR: load  | DR:     105 | SP:   0 | Addr:  16 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     105 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What ' << 'i'
+  DEBUG   machine:simulation    TICK:  207 | AC:  105 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  211 | AC:   13 | PC:  56 | IR: load  | DR:      13 | SP:   0 | Addr:  42 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      13 | mode: normal
+  DEBUG   machine:simulation    TICK:  214 | AC:   12 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  218 | AC:   12 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      12 | mode: normal
+  DEBUG   machine:simulation    TICK:  221 | AC:   12 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  225 | AC:   16 | PC:  51 | IR: load  | DR:      16 | SP:   0 | Addr:  29 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      16 | mode: normal
+  DEBUG   machine:simulation    TICK:  228 | AC:   17 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      12 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  232 | AC:   17 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      17 | mode: normal
+  DEBUG   machine:simulation    TICK:  238 | AC:  115 | PC:  54 | IR: load  | DR:     115 | SP:   0 | Addr:  17 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     115 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What i' << 's'
+  DEBUG   machine:simulation    TICK:  242 | AC:  115 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  246 | AC:   12 | PC:  56 | IR: load  | DR:      12 | SP:   0 | Addr:  42 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      12 | mode: normal
+  DEBUG   machine:simulation    TICK:  249 | AC:   11 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      17 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  253 | AC:   11 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:  256 | AC:   11 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  260 | AC:   17 | PC:  51 | IR: load  | DR:      17 | SP:   0 | Addr:  29 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      17 | mode: normal
+  DEBUG   machine:simulation    TICK:  263 | AC:   18 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      11 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  267 | AC:   18 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      18 | mode: normal
+  DEBUG   machine:simulation    TICK:  273 | AC:   32 | PC:  54 | IR: load  | DR:      32 | SP:   0 | Addr:  18 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is' << ' '
+  DEBUG   machine:simulation    TICK:  277 | AC:   32 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  281 | AC:   11 | PC:  56 | IR: load  | DR:      11 | SP:   0 | Addr:  42 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:  284 | AC:   10 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      18 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  288 | AC:   10 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:      10 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: normal
+  DEBUG   machine:simulation    TICK:  291 | AC:   10 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:      10 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  295 | AC:   18 | PC:  51 | IR: load  | DR:      18 | SP:   0 | Addr:  29 | ToMem:      10 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      18 | mode: normal
+  DEBUG   machine:simulation    TICK:  298 | AC:   19 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:      10 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  302 | AC:   19 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      19 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      19 | mode: normal
+  DEBUG   machine:simulation    TICK:  308 | AC:  121 | PC:  54 | IR: load  | DR:     121 | SP:   0 | Addr:  19 | ToMem:      19 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     121 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is ' << 'y'
+  DEBUG   machine:simulation    TICK:  312 | AC:  121 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      19 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  316 | AC:   10 | PC:  56 | IR: load  | DR:      10 | SP:   0 | Addr:  42 | ToMem:      19 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: normal
+  DEBUG   machine:simulation    TICK:  319 | AC:    9 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      19 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  323 | AC:    9 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       9 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       9 | mode: normal
+  DEBUG   machine:simulation    TICK:  326 | AC:    9 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       9 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  330 | AC:   19 | PC:  51 | IR: load  | DR:      19 | SP:   0 | Addr:  29 | ToMem:       9 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      19 | mode: normal
+  DEBUG   machine:simulation    TICK:  333 | AC:   20 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       9 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  337 | AC:   20 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      20 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      20 | mode: normal
+  DEBUG   machine:simulation    TICK:  343 | AC:  111 | PC:  54 | IR: load  | DR:     111 | SP:   0 | Addr:  20 | ToMem:      20 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is y' << 'o'
+  DEBUG   machine:simulation    TICK:  347 | AC:  111 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      20 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  351 | AC:    9 | PC:  56 | IR: load  | DR:       9 | SP:   0 | Addr:  42 | ToMem:      20 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       9 | mode: normal
+  DEBUG   machine:simulation    TICK:  354 | AC:    8 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      20 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  358 | AC:    8 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       8 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       8 | mode: normal
+  DEBUG   machine:simulation    TICK:  361 | AC:    8 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       8 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  365 | AC:   20 | PC:  51 | IR: load  | DR:      20 | SP:   0 | Addr:  29 | ToMem:       8 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      20 | mode: normal
+  DEBUG   machine:simulation    TICK:  368 | AC:   21 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       8 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  372 | AC:   21 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      21 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      21 | mode: normal
+  DEBUG   machine:simulation    TICK:  378 | AC:  117 | PC:  54 | IR: load  | DR:     117 | SP:   0 | Addr:  21 | ToMem:      21 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     117 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is yo' << 'u'
+  DEBUG   machine:simulation    TICK:  382 | AC:  117 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      21 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  386 | AC:    8 | PC:  56 | IR: load  | DR:       8 | SP:   0 | Addr:  42 | ToMem:      21 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       8 | mode: normal
+  DEBUG   machine:simulation    TICK:  389 | AC:    7 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      21 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  393 | AC:    7 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       7 | mode: normal
+  DEBUG   machine:simulation    TICK:  396 | AC:    7 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  400 | AC:   21 | PC:  51 | IR: load  | DR:      21 | SP:   0 | Addr:  29 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      21 | mode: normal
+  DEBUG   machine:simulation    TICK:  403 | AC:   22 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  407 | AC:   22 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      22 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      22 | mode: normal
+  DEBUG   machine:simulation    TICK:  413 | AC:  114 | PC:  54 | IR: load  | DR:     114 | SP:   0 | Addr:  22 | ToMem:      22 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     114 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is you' << 'r'
+  DEBUG   machine:simulation    TICK:  417 | AC:  114 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      22 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  421 | AC:    7 | PC:  56 | IR: load  | DR:       7 | SP:   0 | Addr:  42 | ToMem:      22 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       7 | mode: normal
+  DEBUG   machine:simulation    TICK:  424 | AC:    6 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      22 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  428 | AC:    6 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: normal
+  DEBUG   machine:simulation    TICK:  431 | AC:    6 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  435 | AC:   22 | PC:  51 | IR: load  | DR:      22 | SP:   0 | Addr:  29 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      22 | mode: normal
+  DEBUG   machine:simulation    TICK:  438 | AC:   23 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  442 | AC:   23 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      23 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      23 | mode: normal
+  DEBUG   machine:simulation    TICK:  448 | AC:   32 | PC:  54 | IR: load  | DR:      32 | SP:   0 | Addr:  23 | ToMem:      23 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your' << ' '
+  DEBUG   machine:simulation    TICK:  452 | AC:   32 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      23 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  456 | AC:    6 | PC:  56 | IR: load  | DR:       6 | SP:   0 | Addr:  42 | ToMem:      23 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: normal
+  DEBUG   machine:simulation    TICK:  459 | AC:    5 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      23 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  463 | AC:    5 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK:  466 | AC:    5 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  470 | AC:   23 | PC:  51 | IR: load  | DR:      23 | SP:   0 | Addr:  29 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      23 | mode: normal
+  DEBUG   machine:simulation    TICK:  473 | AC:   24 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  477 | AC:   24 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      24 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      24 | mode: normal
+  DEBUG   machine:simulation    TICK:  483 | AC:  110 | PC:  54 | IR: load  | DR:     110 | SP:   0 | Addr:  24 | ToMem:      24 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     110 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your ' << 'n'
+  DEBUG   machine:simulation    TICK:  487 | AC:  110 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      24 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  491 | AC:    5 | PC:  56 | IR: load  | DR:       5 | SP:   0 | Addr:  42 | ToMem:      24 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK:  494 | AC:    4 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      24 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  498 | AC:    4 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK:  501 | AC:    4 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  505 | AC:   24 | PC:  51 | IR: load  | DR:      24 | SP:   0 | Addr:  29 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      24 | mode: normal
+  DEBUG   machine:simulation    TICK:  508 | AC:   25 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  512 | AC:   25 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      25 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      25 | mode: normal
+  DEBUG   machine:simulation    TICK:  518 | AC:   97 | PC:  54 | IR: load  | DR:      97 | SP:   0 | Addr:  25 | ToMem:      25 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      97 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your n' << 'a'
+  DEBUG   machine:simulation    TICK:  522 | AC:   97 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      25 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  526 | AC:    4 | PC:  56 | IR: load  | DR:       4 | SP:   0 | Addr:  42 | ToMem:      25 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK:  529 | AC:    3 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      25 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  533 | AC:    3 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK:  536 | AC:    3 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  540 | AC:   25 | PC:  51 | IR: load  | DR:      25 | SP:   0 | Addr:  29 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      25 | mode: normal
+  DEBUG   machine:simulation    TICK:  543 | AC:   26 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  547 | AC:   26 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      26 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: normal
+  DEBUG   machine:simulation    TICK:  553 | AC:  109 | PC:  54 | IR: load  | DR:     109 | SP:   0 | Addr:  26 | ToMem:      26 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     109 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your na' << 'm'
+  DEBUG   machine:simulation    TICK:  557 | AC:  109 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      26 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  561 | AC:    3 | PC:  56 | IR: load  | DR:       3 | SP:   0 | Addr:  42 | ToMem:      26 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK:  564 | AC:    2 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      26 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  568 | AC:    2 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK:  571 | AC:    2 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  575 | AC:   26 | PC:  51 | IR: load  | DR:      26 | SP:   0 | Addr:  29 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: normal
+  DEBUG   machine:simulation    TICK:  578 | AC:   27 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  582 | AC:   27 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      27 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      27 | mode: normal
+  DEBUG   machine:simulation    TICK:  588 | AC:  101 | PC:  54 | IR: load  | DR:     101 | SP:   0 | Addr:  27 | ToMem:      27 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     101 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your nam' << 'e'
+  DEBUG   machine:simulation    TICK:  592 | AC:  101 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      27 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  596 | AC:    2 | PC:  56 | IR: load  | DR:       2 | SP:   0 | Addr:  42 | ToMem:      27 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK:  599 | AC:    1 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      27 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  603 | AC:    1 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  606 | AC:    1 | PC:  50 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  610 | AC:   27 | PC:  51 | IR: load  | DR:      27 | SP:   0 | Addr:  29 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      27 | mode: normal
+  DEBUG   machine:simulation    TICK:  613 | AC:   28 | PC:  52 | IR: inc   | DR:       0 | SP:   0 | Addr:  51 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  617 | AC:   28 | PC:  53 | IR: store | DR:      29 | SP:   0 | Addr:  29 | ToMem:      28 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      28 | mode: normal
+  DEBUG   machine:simulation    TICK:  623 | AC:   63 | PC:  54 | IR: load  | DR:      63 | SP:   0 | Addr:  28 | ToMem:      28 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      63 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name' << '?'
+  DEBUG   machine:simulation    TICK:  627 | AC:   63 | PC:  55 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      28 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  631 | AC:    1 | PC:  56 | IR: load  | DR:       1 | SP:   0 | Addr:  42 | ToMem:      28 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  634 | AC:    0 | PC:  57 | IR: dec   | DR:       0 | SP:   0 | Addr:  56 | ToMem:      28 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  638 | AC:    0 | PC:  58 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  641 | AC:    0 | PC:  59 | IR: jnz   | DR:      50 | SP:   0 | Addr:  58 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      50 | mode: normal
+  DEBUG   machine:simulation    TICK:  644 | AC:    0 | PC:  60 | IR: ei    | DR:       0 | SP:   0 | Addr:  59 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  648 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  651 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  655 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  658 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  662 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  665 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  669 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  672 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  676 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  679 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  683 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  686 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  690 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  693 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  697 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  705 | AC:    0 | PC:  92 | IR: jz    | DR:      92 | SP: 198 | Addr:   1 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  708 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'M'
+  DEBUG   machine:simulation    TICK:  711 | AC:   77 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  715 | AC:   77 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  718 | AC:   77 | PC:  99 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  724 | AC:   77 | PC: 100 | IR: store | DR:     110 | SP: 198 | Addr: 110 | ToMem:      77 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  728 | AC:  110 | PC: 101 | IR: load  | DR:     110 | SP: 198 | Addr: 108 | ToMem:      77 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     110 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  731 | AC:  111 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:      77 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  735 | AC:  111 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     111 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  739 | AC:    0 | PC: 104 | IR: load  | DR:       0 | SP: 198 | Addr: 107 | ToMem:     111 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  742 | AC:    1 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     111 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  746 | AC:    1 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  754 | AC:    1 | PC:  60 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  758 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  761 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  765 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  768 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  772 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  775 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  779 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  782 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  786 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  789 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  793 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  796 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  805 | AC:    0 | PC:  92 | IR: load  | DR:      92 | SP: 198 | Addr:   1 | ToMem:      61 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  808 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'a'
+  DEBUG   machine:simulation    TICK:  811 | AC:   97 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  815 | AC:   97 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  818 | AC:   97 | PC:  99 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  824 | AC:   97 | PC: 100 | IR: store | DR:     111 | SP: 198 | Addr: 111 | ToMem:      97 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      97 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  828 | AC:  111 | PC: 101 | IR: load  | DR:     111 | SP: 198 | Addr: 108 | ToMem:      97 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  831 | AC:  112 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:      97 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  835 | AC:  112 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     112 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  839 | AC:    1 | PC: 104 | IR: load  | DR:       1 | SP: 198 | Addr: 107 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  842 | AC:    2 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  846 | AC:    2 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  854 | AC:    2 | PC:  61 | IR: iret  | DR:      11 | SP:   0 | Addr: 199 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:  857 | AC:    2 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  861 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  864 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  868 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  871 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  875 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  878 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  882 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  885 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  889 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  892 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  896 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       2 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  899 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  908 | AC:    0 | PC:  92 | IR: load  | DR:      92 | SP: 198 | Addr:   1 | ToMem:      61 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  911 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'x'
+  DEBUG   machine:simulation    TICK:  914 | AC:  120 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  918 | AC:  120 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  921 | AC:  120 | PC:  99 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  927 | AC:  120 | PC: 100 | IR: store | DR:     112 | SP: 198 | Addr: 112 | ToMem:     120 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     120 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  931 | AC:  112 | PC: 101 | IR: load  | DR:     112 | SP: 198 | Addr: 108 | ToMem:     120 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     112 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  934 | AC:  113 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:     120 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  938 | AC:  113 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     113 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  942 | AC:    2 | PC: 104 | IR: load  | DR:       2 | SP: 198 | Addr: 107 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  945 | AC:    3 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  949 | AC:    3 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  957 | AC:    3 | PC:  61 | IR: iret  | DR:      11 | SP:   0 | Addr: 199 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:  960 | AC:    3 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  964 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  967 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  971 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  974 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  978 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  981 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  985 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  988 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  992 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:  995 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK:  999 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       3 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1007 | AC:    0 | PC:  92 | IR: jz    | DR:      92 | SP: 198 | Addr:   1 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1010 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'i'
+  DEBUG   machine:simulation    TICK: 1013 | AC:  105 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1017 | AC:  105 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1020 | AC:  105 | PC:  99 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1026 | AC:  105 | PC: 100 | IR: store | DR:     113 | SP: 198 | Addr: 113 | ToMem:     105 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     105 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1030 | AC:  113 | PC: 101 | IR: load  | DR:     113 | SP: 198 | Addr: 108 | ToMem:     105 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     113 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1033 | AC:  114 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:     105 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1037 | AC:  114 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     114 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1041 | AC:    3 | PC: 104 | IR: load  | DR:       3 | SP: 198 | Addr: 107 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1044 | AC:    4 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1048 | AC:    4 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1056 | AC:    4 | PC:  60 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1060 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1063 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1067 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1070 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1074 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1077 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1081 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1084 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1088 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1091 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1095 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       4 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1098 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1107 | AC:    0 | PC:  92 | IR: load  | DR:      92 | SP: 198 | Addr:   1 | ToMem:      61 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1110 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'm'
+  DEBUG   machine:simulation    TICK: 1113 | AC:  109 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1117 | AC:  109 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1120 | AC:  109 | PC:  99 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      61 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1126 | AC:  109 | PC: 100 | IR: store | DR:     114 | SP: 198 | Addr: 114 | ToMem:     109 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     109 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1130 | AC:  114 | PC: 101 | IR: load  | DR:     114 | SP: 198 | Addr: 108 | ToMem:     109 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     114 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1133 | AC:  115 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:     109 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1137 | AC:  115 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     115 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     115 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1141 | AC:    4 | PC: 104 | IR: load  | DR:       4 | SP: 198 | Addr: 107 | ToMem:     115 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1144 | AC:    5 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     115 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1148 | AC:    5 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1156 | AC:    5 | PC:  61 | IR: iret  | DR:      11 | SP:   0 | Addr: 199 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK: 1159 | AC:    5 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1163 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1166 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1170 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1173 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1177 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1180 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1184 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1187 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1191 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1194 | AC:    0 | PC:  60 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1198 | AC:    0 | PC:  61 | IR: load  | DR:       0 | SP:   0 | Addr:  45 | ToMem:       5 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1206 | AC:    0 | PC:  92 | IR: jz    | DR:      92 | SP: 198 | Addr:   1 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      92 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1209 | AC:    0 | PC:  93 | IR: di    | DR:       0 | SP: 198 | Addr:  92 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: '\n'
+  DEBUG   machine:simulation    TICK: 1212 | AC:   10 | PC:  94 | IR: in    | DR:      43 | SP: 198 | Addr:  93 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      43 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1216 | AC:   10 | PC:  95 | IR: cmp   | DR:      10 | SP: 198 | Addr:  46 | ToMem:      60 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1219 | AC:   10 | PC:  96 | IR: jnz   | DR:      99 | SP: 198 | Addr:  95 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      99 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1223 | AC:    0 | PC:  97 | IR: load  | DR:       0 | SP: 198 | Addr:  45 | ToMem:      60 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1226 | AC:    1 | PC:  98 | IR: inc   | DR:       0 | SP: 198 | Addr:  97 | ToMem:      60 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1230 | AC:    1 | PC:  99 | IR: store | DR:      45 | SP: 198 | Addr:  45 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1236 | AC:    1 | PC: 100 | IR: store | DR:     115 | SP: 198 | Addr: 115 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1240 | AC:  115 | PC: 101 | IR: load  | DR:     115 | SP: 198 | Addr: 108 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     115 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1243 | AC:  116 | PC: 102 | IR: inc   | DR:       0 | SP: 198 | Addr: 101 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1247 | AC:  116 | PC: 103 | IR: store | DR:     108 | SP: 198 | Addr: 108 | ToMem:     116 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     116 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1251 | AC:    5 | PC: 104 | IR: load  | DR:       5 | SP: 198 | Addr: 107 | ToMem:     116 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1254 | AC:    6 | PC: 105 | IR: inc   | DR:       0 | SP: 198 | Addr: 104 | ToMem:     116 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1258 | AC:    6 | PC: 106 | IR: store | DR:     107 | SP: 198 | Addr: 107 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: interrupt
+  DEBUG   machine:simulation    TICK: 1266 | AC:    6 | PC:  60 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1270 | AC:    1 | PC:  61 | IR: load  | DR:       1 | SP:   0 | Addr:  45 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1273 | AC:    1 | PC:  62 | IR: jz    | DR:      60 | SP:   0 | Addr:  61 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      60 | mode: normal
+  DEBUG   machine:simulation    TICK: 1276 | AC:    1 | PC:  63 | IR: di    | DR:       0 | SP:   0 | Addr:  62 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1280 | AC:    7 | PC:  64 | IR: load  | DR:       7 | SP:   0 | Addr:  30 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       7 | mode: normal
+  DEBUG   machine:simulation    TICK: 1284 | AC:    7 | PC:  65 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       7 | mode: normal
+  DEBUG   machine:simulation    TICK: 1288 | AC:   30 | PC:  66 | IR: load  | DR:      30 | SP:   0 | Addr:  38 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      30 | mode: normal
+  DEBUG   machine:simulation    TICK: 1291 | AC:   31 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       7 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1295 | AC:   31 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      31 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      31 | mode: normal
+  DEBUG   machine:simulation    TICK: 1301 | AC:   72 | PC:  69 | IR: load  | DR:      72 | SP:   0 | Addr:  31 | ToMem:      31 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      72 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?' << 'H'
+  DEBUG   machine:simulation    TICK: 1305 | AC:   72 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      31 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1309 | AC:    7 | PC:  71 | IR: load  | DR:       7 | SP:   0 | Addr:  42 | ToMem:      31 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       7 | mode: normal
+  DEBUG   machine:simulation    TICK: 1312 | AC:    6 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      31 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1316 | AC:    6 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: normal
+  DEBUG   machine:simulation    TICK: 1319 | AC:    6 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1323 | AC:   31 | PC:  66 | IR: load  | DR:      31 | SP:   0 | Addr:  38 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      31 | mode: normal
+  DEBUG   machine:simulation    TICK: 1326 | AC:   32 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       6 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1330 | AC:   32 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      32 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:simulation    TICK: 1336 | AC:  101 | PC:  69 | IR: load  | DR:     101 | SP:   0 | Addr:  32 | ToMem:      32 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     101 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?H' << 'e'
+  DEBUG   machine:simulation    TICK: 1340 | AC:  101 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      32 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1344 | AC:    6 | PC:  71 | IR: load  | DR:       6 | SP:   0 | Addr:  42 | ToMem:      32 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: normal
+  DEBUG   machine:simulation    TICK: 1347 | AC:    5 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      32 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1351 | AC:    5 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK: 1354 | AC:    5 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1358 | AC:   32 | PC:  66 | IR: load  | DR:      32 | SP:   0 | Addr:  38 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:simulation    TICK: 1361 | AC:   33 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1365 | AC:   33 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      33 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      33 | mode: normal
+  DEBUG   machine:simulation    TICK: 1371 | AC:  108 | PC:  69 | IR: load  | DR:     108 | SP:   0 | Addr:  33 | ToMem:      33 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     108 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?He' << 'l'
+  DEBUG   machine:simulation    TICK: 1375 | AC:  108 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      33 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1379 | AC:    5 | PC:  71 | IR: load  | DR:       5 | SP:   0 | Addr:  42 | ToMem:      33 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK: 1382 | AC:    4 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      33 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1386 | AC:    4 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK: 1389 | AC:    4 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1393 | AC:   33 | PC:  66 | IR: load  | DR:      33 | SP:   0 | Addr:  38 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      33 | mode: normal
+  DEBUG   machine:simulation    TICK: 1396 | AC:   34 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1400 | AC:   34 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      34 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      34 | mode: normal
+  DEBUG   machine:simulation    TICK: 1406 | AC:  108 | PC:  69 | IR: load  | DR:     108 | SP:   0 | Addr:  34 | ToMem:      34 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     108 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hel' << 'l'
+  DEBUG   machine:simulation    TICK: 1410 | AC:  108 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      34 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1414 | AC:    4 | PC:  71 | IR: load  | DR:       4 | SP:   0 | Addr:  42 | ToMem:      34 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK: 1417 | AC:    3 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      34 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1421 | AC:    3 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK: 1424 | AC:    3 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1428 | AC:   34 | PC:  66 | IR: load  | DR:      34 | SP:   0 | Addr:  38 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      34 | mode: normal
+  DEBUG   machine:simulation    TICK: 1431 | AC:   35 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1435 | AC:   35 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      35 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      35 | mode: normal
+  DEBUG   machine:simulation    TICK: 1441 | AC:  111 | PC:  69 | IR: load  | DR:     111 | SP:   0 | Addr:  35 | ToMem:      35 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hell' << 'o'
+  DEBUG   machine:simulation    TICK: 1445 | AC:  111 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      35 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1449 | AC:    3 | PC:  71 | IR: load  | DR:       3 | SP:   0 | Addr:  42 | ToMem:      35 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK: 1452 | AC:    2 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      35 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1456 | AC:    2 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK: 1459 | AC:    2 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1463 | AC:   35 | PC:  66 | IR: load  | DR:      35 | SP:   0 | Addr:  38 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      35 | mode: normal
+  DEBUG   machine:simulation    TICK: 1466 | AC:   36 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1470 | AC:   36 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      36 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      36 | mode: normal
+  DEBUG   machine:simulation    TICK: 1476 | AC:   44 | PC:  69 | IR: load  | DR:      44 | SP:   0 | Addr:  36 | ToMem:      36 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      44 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello' << ','
+  DEBUG   machine:simulation    TICK: 1480 | AC:   44 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      36 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1484 | AC:    2 | PC:  71 | IR: load  | DR:       2 | SP:   0 | Addr:  42 | ToMem:      36 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK: 1487 | AC:    1 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      36 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1491 | AC:    1 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1494 | AC:    1 | PC:  65 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1498 | AC:   36 | PC:  66 | IR: load  | DR:      36 | SP:   0 | Addr:  38 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      36 | mode: normal
+  DEBUG   machine:simulation    TICK: 1501 | AC:   37 | PC:  67 | IR: inc   | DR:       0 | SP:   0 | Addr:  66 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1505 | AC:   37 | PC:  68 | IR: store | DR:      38 | SP:   0 | Addr:  38 | ToMem:      37 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      37 | mode: normal
+  DEBUG   machine:simulation    TICK: 1511 | AC:   32 | PC:  69 | IR: load  | DR:      32 | SP:   0 | Addr:  37 | ToMem:      37 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      32 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello,' << ' '
+  DEBUG   machine:simulation    TICK: 1515 | AC:   32 | PC:  70 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      37 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1519 | AC:    1 | PC:  71 | IR: load  | DR:       1 | SP:   0 | Addr:  42 | ToMem:      37 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1522 | AC:    0 | PC:  72 | IR: dec   | DR:       0 | SP:   0 | Addr:  71 | ToMem:      37 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1526 | AC:    0 | PC:  73 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1529 | AC:    0 | PC:  74 | IR: jnz   | DR:      65 | SP:   0 | Addr:  73 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      65 | mode: normal
+  DEBUG   machine:simulation    TICK: 1533 | AC:    6 | PC:  75 | IR: load  | DR:       6 | SP:   0 | Addr: 107 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       6 | mode: normal
+  DEBUG   machine:simulation    TICK: 1536 | AC:    5 | PC:  76 | IR: dec   | DR:       0 | SP:   0 | Addr:  75 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1540 | AC:    5 | PC:  77 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK: 1546 | AC:   77 | PC:  78 | IR: load  | DR:      77 | SP:   0 | Addr: 110 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, ' << 'M'
+  DEBUG   machine:simulation    TICK: 1550 | AC:   77 | PC:  79 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1554 | AC:  110 | PC:  80 | IR: load  | DR:     110 | SP:   0 | Addr: 109 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     110 | mode: normal
+  DEBUG   machine:simulation    TICK: 1557 | AC:  111 | PC:  81 | IR: inc   | DR:       0 | SP:   0 | Addr:  80 | ToMem:       5 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1561 | AC:  111 | PC:  82 | IR: store | DR:     109 | SP:   0 | Addr: 109 | ToMem:     111 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: normal
+  DEBUG   machine:simulation    TICK: 1565 | AC:    5 | PC:  83 | IR: load  | DR:       5 | SP:   0 | Addr:  42 | ToMem:     111 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       5 | mode: normal
+  DEBUG   machine:simulation    TICK: 1568 | AC:    4 | PC:  84 | IR: dec   | DR:       0 | SP:   0 | Addr:  83 | ToMem:     111 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1572 | AC:    4 | PC:  85 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK: 1575 | AC:    4 | PC:  77 | IR: jnz   | DR:      77 | SP:   0 | Addr:  85 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:simulation    TICK: 1581 | AC:   97 | PC:  78 | IR: load  | DR:      97 | SP:   0 | Addr: 111 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      97 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, M' << 'a'
+  DEBUG   machine:simulation    TICK: 1585 | AC:   97 | PC:  79 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1589 | AC:  111 | PC:  80 | IR: load  | DR:     111 | SP:   0 | Addr: 109 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     111 | mode: normal
+  DEBUG   machine:simulation    TICK: 1592 | AC:  112 | PC:  81 | IR: inc   | DR:       0 | SP:   0 | Addr:  80 | ToMem:       4 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1596 | AC:  112 | PC:  82 | IR: store | DR:     109 | SP:   0 | Addr: 109 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     112 | mode: normal
+  DEBUG   machine:simulation    TICK: 1600 | AC:    4 | PC:  83 | IR: load  | DR:       4 | SP:   0 | Addr:  42 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       4 | mode: normal
+  DEBUG   machine:simulation    TICK: 1603 | AC:    3 | PC:  84 | IR: dec   | DR:       0 | SP:   0 | Addr:  83 | ToMem:     112 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1607 | AC:    3 | PC:  85 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK: 1610 | AC:    3 | PC:  77 | IR: jnz   | DR:      77 | SP:   0 | Addr:  85 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:simulation    TICK: 1616 | AC:  120 | PC:  78 | IR: load  | DR:     120 | SP:   0 | Addr: 112 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     120 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, Ma' << 'x'
+  DEBUG   machine:simulation    TICK: 1620 | AC:  120 | PC:  79 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1624 | AC:  112 | PC:  80 | IR: load  | DR:     112 | SP:   0 | Addr: 109 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     112 | mode: normal
+  DEBUG   machine:simulation    TICK: 1627 | AC:  113 | PC:  81 | IR: inc   | DR:       0 | SP:   0 | Addr:  80 | ToMem:       3 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1631 | AC:  113 | PC:  82 | IR: store | DR:     109 | SP:   0 | Addr: 109 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     113 | mode: normal
+  DEBUG   machine:simulation    TICK: 1635 | AC:    3 | PC:  83 | IR: load  | DR:       3 | SP:   0 | Addr:  42 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       3 | mode: normal
+  DEBUG   machine:simulation    TICK: 1638 | AC:    2 | PC:  84 | IR: dec   | DR:       0 | SP:   0 | Addr:  83 | ToMem:     113 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1642 | AC:    2 | PC:  85 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK: 1645 | AC:    2 | PC:  77 | IR: jnz   | DR:      77 | SP:   0 | Addr:  85 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:simulation    TICK: 1651 | AC:  105 | PC:  78 | IR: load  | DR:     105 | SP:   0 | Addr: 113 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     105 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, Max' << 'i'
+  DEBUG   machine:simulation    TICK: 1655 | AC:  105 | PC:  79 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1659 | AC:  113 | PC:  80 | IR: load  | DR:     113 | SP:   0 | Addr: 109 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     113 | mode: normal
+  DEBUG   machine:simulation    TICK: 1662 | AC:  114 | PC:  81 | IR: inc   | DR:       0 | SP:   0 | Addr:  80 | ToMem:       2 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1666 | AC:  114 | PC:  82 | IR: store | DR:     109 | SP:   0 | Addr: 109 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     114 | mode: normal
+  DEBUG   machine:simulation    TICK: 1670 | AC:    2 | PC:  83 | IR: load  | DR:       2 | SP:   0 | Addr:  42 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       2 | mode: normal
+  DEBUG   machine:simulation    TICK: 1673 | AC:    1 | PC:  84 | IR: dec   | DR:       0 | SP:   0 | Addr:  83 | ToMem:     114 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1677 | AC:    1 | PC:  85 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1680 | AC:    1 | PC:  77 | IR: jnz   | DR:      77 | SP:   0 | Addr:  85 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:simulation    TICK: 1686 | AC:  109 | PC:  78 | IR: load  | DR:     109 | SP:   0 | Addr: 114 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     109 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, Maxi' << 'm'
+  DEBUG   machine:simulation    TICK: 1690 | AC:  109 | PC:  79 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1694 | AC:  114 | PC:  80 | IR: load  | DR:     114 | SP:   0 | Addr: 109 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     114 | mode: normal
+  DEBUG   machine:simulation    TICK: 1697 | AC:  115 | PC:  81 | IR: inc   | DR:       0 | SP:   0 | Addr:  80 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1701 | AC:  115 | PC:  82 | IR: store | DR:     109 | SP:   0 | Addr: 109 | ToMem:     115 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:     115 | mode: normal
+  DEBUG   machine:simulation    TICK: 1705 | AC:    1 | PC:  83 | IR: load  | DR:       1 | SP:   0 | Addr:  42 | ToMem:     115 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK: 1708 | AC:    0 | PC:  84 | IR: dec   | DR:       0 | SP:   0 | Addr:  83 | ToMem:     115 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1712 | AC:    0 | PC:  85 | IR: store | DR:      42 | SP:   0 | Addr:  42 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1715 | AC:    0 | PC:  86 | IR: jnz   | DR:      77 | SP:   0 | Addr:  85 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      77 | mode: normal
+  DEBUG   machine:simulation    TICK: 1719 | AC:   39 | PC:  87 | IR: load  | DR:      39 | SP:   0 | Addr:  41 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      39 | mode: normal
+  DEBUG   machine:simulation    TICK: 1722 | AC:   40 | PC:  88 | IR: inc   | DR:       0 | SP:   0 | Addr:  87 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK: 1726 | AC:   40 | PC:  89 | IR: store | DR:      41 | SP:   0 | Addr:  41 | ToMem:      40 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      40 | mode: normal
+  DEBUG   machine:simulation    TICK: 1732 | AC:   33 | PC:  90 | IR: load  | DR:      33 | SP:   0 | Addr:  40 | ToMem:      40 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      33 | mode: normal
+  DEBUG   machine:signal_output output_symbol_buffer: 'What is your name?Hello, Maxim' << '!'
+  DEBUG   machine:simulation    TICK: 1736 | AC:   33 | PC:  91 | IR: out   | DR:       1 | SP:   0 | Addr:  44 | ToMem:      40 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: normal
+  INFO    machine:simulation    output_symbol_buffer: 'What is your name?Hello, Maxim!'
+  INFO    machine:simulation    output_numeric_buffer: []

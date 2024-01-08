@@ -1,0 +1,141 @@
+in_source: |-
+  org 1
+  vector:
+      .word interrupt
+
+  org 10
+  in_port:
+      .word 0
+  out_port:
+      .word 1
+  flag:
+      .word 0
+  line_feed:
+      .word 10
+
+  _start:
+      ei
+      spin_loop:
+          load flag
+          jz spin_loop
+      halt
+
+  interrupt:
+      di
+      in in_port
+      out out_port
+      cmp line_feed
+      jnz returning
+      load flag
+      inc
+      store flag
+      returning:
+          iret
+in_stdin: |
+  [(10, 'P'), (40, 'e'), (70, 'n'),  (100, 's'), (130, 'k'), (160, 'o'), (190, 'i'), (220, '\n')]
+out_code: |-
+  [{"index": 0, "opcode": "jmp", "value": 14, "is_indirect": false},
+   {"index": 1, "opcode": "nop", "value": 18, "is_indirect": false},
+   {"index": 10, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 11, "opcode": "nop", "value": 1, "is_indirect": false},
+   {"index": 12, "opcode": "nop", "value": 0, "is_indirect": false},
+   {"index": 13, "opcode": "nop", "value": 10, "is_indirect": false},
+   {"index": 14, "opcode": "ei", "value": 0, "is_indirect": false},
+   {"index": 15, "opcode": "load", "value": 12, "is_indirect": false},
+   {"index": 16, "opcode": "jz", "value": 15, "is_indirect": false},
+   {"index": 17, "opcode": "halt", "value": 0, "is_indirect": false},
+   {"index": 18, "opcode": "di", "value": 0, "is_indirect": false},
+   {"index": 19, "opcode": "in", "value": 10, "is_indirect": false},
+   {"index": 20, "opcode": "out", "value": 11, "is_indirect": false},
+   {"index": 21, "opcode": "cmp", "value": 13, "is_indirect": false},
+   {"index": 22, "opcode": "jnz", "value": 26, "is_indirect": false},
+   {"index": 23, "opcode": "load", "value": 12, "is_indirect": false},
+   {"index": 24, "opcode": "inc", "value": 0, "is_indirect": false},
+   {"index": 25, "opcode": "store", "value": 12, "is_indirect": false},
+   {"index": 26, "opcode": "iret", "value": 0, "is_indirect": false}]
+
+out_stdout: |
+  source LoC: 32 code instr: 19
+  ============================================================
+  Penskoi
+
+  []
+  instr_counter:  57 ticks: 273
+
+out_log: |
+  DEBUG   machine:simulation    TICK:    0 | AC:    0 | PC:   0 | IR: nop   | DR:       0 | SP:   0 | Addr:   0 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:    3 | AC:    0 | PC:  14 | IR: jmp   | DR:      14 | SP:   0 | Addr:   0 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+  DEBUG   machine:simulation    TICK:    6 | AC:    0 | PC:  15 | IR: ei    | DR:       0 | SP:   0 | Addr:  14 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+  DEBUG   machine:simulation    TICK:   15 | AC:    0 | PC:  18 | IR: load  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   18 | AC:    0 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'P'
+  DEBUG   machine:simulation    TICK:   21 | AC:   80 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: '' << 'P'
+  DEBUG   machine:simulation    TICK:   25 | AC:   80 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   29 | AC:   80 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   32 | AC:   80 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   45 | AC:   80 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   48 | AC:   80 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'e'
+  DEBUG   machine:simulation    TICK:   51 | AC:  101 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'P' << 'e'
+  DEBUG   machine:simulation    TICK:   55 | AC:  101 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   59 | AC:  101 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   62 | AC:  101 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   75 | AC:  101 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   78 | AC:  101 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'n'
+  DEBUG   machine:simulation    TICK:   81 | AC:  110 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Pe' << 'n'
+  DEBUG   machine:simulation    TICK:   85 | AC:  110 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   89 | AC:  110 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:   92 | AC:  110 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  105 | AC:  110 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  108 | AC:  110 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 's'
+  DEBUG   machine:simulation    TICK:  111 | AC:  115 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Pen' << 's'
+  DEBUG   machine:simulation    TICK:  115 | AC:  115 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  119 | AC:  115 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  122 | AC:  115 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  135 | AC:  115 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  138 | AC:  115 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'k'
+  DEBUG   machine:simulation    TICK:  141 | AC:  107 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Pens' << 'k'
+  DEBUG   machine:simulation    TICK:  145 | AC:  107 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  149 | AC:  107 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  152 | AC:  107 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  165 | AC:  107 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  168 | AC:  107 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'o'
+  DEBUG   machine:simulation    TICK:  171 | AC:  111 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Pensk' << 'o'
+  DEBUG   machine:simulation    TICK:  175 | AC:  111 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  179 | AC:  111 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  182 | AC:  111 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  195 | AC:  111 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  198 | AC:  111 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: 'i'
+  DEBUG   machine:simulation    TICK:  201 | AC:  105 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Pensko' << 'i'
+  DEBUG   machine:simulation    TICK:  205 | AC:  105 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  209 | AC:  105 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  212 | AC:  105 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  225 | AC:  105 | PC:  18 | IR: iret  | DR:      18 | SP: 198 | Addr:   1 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      18 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  228 | AC:  105 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:signal_latch_ac input: '\n'
+  DEBUG   machine:simulation    TICK:  231 | AC:   10 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:signal_output output_symbol_buffer: 'Penskoi' << '\n'
+  DEBUG   machine:simulation    TICK:  235 | AC:   10 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  239 | AC:   10 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  242 | AC:   10 | PC:  23 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  246 | AC:    0 | PC:  24 | IR: load  | DR:       0 | SP: 198 | Addr:  12 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  249 | AC:    1 | PC:  25 | IR: inc   | DR:       0 | SP: 198 | Addr:  24 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  253 | AC:    1 | PC:  26 | IR: store | DR:      12 | SP: 198 | Addr:  12 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+  DEBUG   machine:simulation    TICK:  261 | AC:    1 | PC:  16 | IR: iret  | DR:      11 | SP:   0 | Addr: 199 | ToMem:       1 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      11 | mode: normal
+  DEBUG   machine:simulation    TICK:  264 | AC:    1 | PC:  15 | IR: jz    | DR:      15 | SP:   0 | Addr:  16 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      15 | mode: normal
+  DEBUG   machine:simulation    TICK:  268 | AC:    1 | PC:  16 | IR: load  | DR:       1 | SP:   0 | Addr:  12 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+  DEBUG   machine:simulation    TICK:  271 | AC:    1 | PC:  17 | IR: jz    | DR:      15 | SP:   0 | Addr:  16 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      15 | mode: normal
+  INFO    machine:simulation    output_symbol_buffer: 'Penskoi\n'
+  INFO    machine:simulation    output_numeric_buffer: []
