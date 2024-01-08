@@ -67,3 +67,6 @@ jobs:
 
       - name: Run Ruff linters
         run: poetry run ruff check .
+        env:
+          CI: true
+          RUFF_COMPLEXITY: 10
