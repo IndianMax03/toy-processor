@@ -29,13 +29,15 @@ def symbol_to_opcode(symbol):
 
 def read_lines(source_filename: str) -> [str]:
     """Построчно читаем файл, убираем отступы и пустые строки"""
+    source_loc = 0
     lines = []
     with open(source_filename) as file:
         for line in file:
+            source_loc += 1
             line = line.strip()
             if line != '':
                 lines.append(line)
-    return lines
+    return lines, source_loc
 
 def remove_comments(code_lines) -> [str]:
     """Убираем комменарии"""
@@ -142,32 +144,20 @@ def to_machine_code(raw_code, _start_position):
 
 def translate(source_filename, debug_mode = False):
     """Многопроходная трансляция программы в машинный код"""
-    lines = read_lines(source_filename)
+    lines, source_loc = read_lines(source_filename)
     lines_without_comments = remove_comments(lines)
     words, labels = lines_to_words_and_labels(lines_without_comments)
     raw_code = link_labels(words, labels)
     _start_position = find_program_start(labels)
     code = to_machine_code(raw_code, _start_position)
-    
-    if debug_mode:
-        print(f"------> TRANSLATOR: DEBUG MODE ON")
-        print(f"------> DEBUG: FOUND _start POSITION AT mem({_start_position})")
-        print(f"------> DEBUG: FOUND LABELS")
-        for index, label in labels.items():
-            print(f"mem({index}) -> {label}")
-        print(f"------> DEBUG: FOUND WORDS")
-        for index, word in words.items():
-            print(f"mem({index}) -> {word}")
-        print(f"------> DEBUG: RAW CODE")
-        for index, raw_opertion in raw_code.items():
-            print(f"mem({index}) -> {raw_opertion}")
-    
-    return code
+    return code, source_loc
 
 def main(source_filename, target_filename):
-    code = translate(source_filename, True)
+    code, source_loc = translate(source_filename, True)
     
     write_code(target_filename, code)
+    
+    print("source LoC:", source_loc, "code instr:", len(code))
 
 if __name__ == "__main__":
     assert len(sys.argv) == 3, "Wrong arguments: translator.py <input_file> <target_file>"
