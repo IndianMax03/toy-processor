@@ -169,17 +169,20 @@ class DataPath:
         if sel == Selectors.FROM_ALU:
             self.ac = self.alu.result
         else:
-            self.ac = ord(self.input_buffer.pop(0)['symbol'])
+            symbol = self.input_buffer.pop(0)['symbol']
+            symbol_code = ord(symbol)
+            self.ac = symbol_code
+            logging.debug("input: %s", repr(symbol))
         
     def signal_output(self):
         port_num = self.dr
         if port_num == 1:
             symbol = chr(self.ac)
-            # logging.info("output_symbol_buffer: %s << %s", repr("".join(self.output_symbol_buffer)), repr(symbol))
+            logging.debug("output_symbol_buffer: %s << %s", repr("".join(self.output_symbol_buffer)), repr(symbol))
             self.output_symbol_buffer.append(symbol)
         elif port_num == 2:
             symbol = self.ac
-            # logging.info("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
+            logging.debug("output_numeric_buffer: [%s] << %d", ", ".join(map(str, self.output_numeric_buffer)), symbol)
             self.output_numeric_buffer.append(symbol)
         
     def signal_wr(self):
@@ -452,7 +455,7 @@ class ControlUnit:
         self.check_for_interruptions(self.data_path.ps['INT_EN'])
     
     def __repr__(self):
-        return "TICK: {:3} | AC: {:3} | PC: {:3} | IR: {:5} | DR: {:6} | SP: {:3} | Addr: {:3} | ToMem: {:6} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:6} | mode: {}".format(
+        return "TICK: {:4} | AC: {:4} | PC: {:3} | IR: {:5} | DR: {:7} | SP: {:3} | Addr: {:3} | ToMem: {:7} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:7} | mode: {}".format(
             self.current_tick(),
             self.data_path.ac,
             self.data_path.pc,
@@ -474,12 +477,12 @@ def simulation(code, input_tokens, memory_size, limit):
     control_unit = ControlUnit(code, data_path)
     instr_counter = 0
     
-    logging.info("%s", control_unit)
+    logging.debug("%s", control_unit)
     try:
         while instr_counter < limit:
             control_unit.decode_and_execute_instruction()
             instr_counter += 1
-            logging.info("%s", control_unit)
+            logging.debug("%s", control_unit)
     except Halt:
         pass
 
@@ -516,13 +519,13 @@ def main(code_file, input_file):
         limit=5000,
     )
 
-    # print("".join(output_symbols))
-    # print("".join(output_numbers))
+    print("".join(output_symbols))
+    print(output_numbers)
     print("instr_counter: ", instr_counter, "ticks:", ticks)
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.DEBUG)
     assert len(sys.argv) == 3, "Wrong arguments: machine.py <code_file> <input_file>"
     _, code_file, input_file = sys.argv
     main(code_file, input_file)
