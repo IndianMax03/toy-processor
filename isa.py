@@ -88,4 +88,4 @@ def write_code(filename, code):
 
 def read_code(filename):
     with open(filename, encoding="utf-8") as file:
-        return json.loads(file.read()) #  code
+        return json.loads(file.read())  #  code

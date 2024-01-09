@@ -1,15 +1,7 @@
 import logging
 import sys
 
-from isa import (
-    ALUOpcode,
-    Opcode,
-    ProgramMode,
-    Selectors,
-    nullar_instructions,
-    onear_instructions,
-    read_code
-)
+from isa import ALUOpcode, Opcode, ProgramMode, Selectors, nullar_instructions, onear_instructions, read_code
 from typing import ClassVar
 
 
@@ -385,9 +377,7 @@ class ControlUnit:
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(
-                ALUOpcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
-            )
+            self.data_path.signal_execute_alu_op(ALUOpcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.CMP:
@@ -395,9 +385,7 @@ class ControlUnit:
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(
-                ALUOpcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
-            )
+            self.data_path.signal_execute_alu_op(ALUOpcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR)
             self.tick()
         elif opcode == Opcode.TEST:
             self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
