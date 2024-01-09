@@ -139,13 +139,13 @@
 
             Instruction & Data memory
 +-----------------------------------------------+
-| 0         : jmp _start                        |  <-- PC, SP
-| 1         : interruption vector address (iva) |
-|          ...                                  |
-| _start    : program start                     |
-|          ...                                  |
-| iva       : interruption handler              |
-|          ...                                  |
+|    0    :  jmp _start                         |  <-- PC, SP
+|    1    :  interruption vector address (iva)  |
+|        ...                                    |
+| _start  :  program start                      |
+|        ...                                    |
+|   iva   :  interruption handler               |
+|        ...                                    |
 +-----------------------------------------------+
 ```
 
