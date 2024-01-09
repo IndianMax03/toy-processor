@@ -1,9 +1,8 @@
 import json
 from enum import Enum
-from dataclasses import dataclass
 
 
-class Program_Mode(str, Enum):
+class ProgramMode(str, Enum):
     NORMAL = "normal"
     INTERRUPT = "interrupt"
 
@@ -11,7 +10,7 @@ class Program_Mode(str, Enum):
         return str(self.value)
 
 
-class ALU_Opcode(str, Enum):
+class ALUOpcode(str, Enum):
     INC_A = "inc_a"
     INC_B = "inc_b"
     DEC_A = "dec_a"
@@ -89,6 +88,4 @@ def write_code(filename, code):
 
 def read_code(filename):
     with open(filename, encoding="utf-8") as file:
-        code = json.loads(file.read())
-
-    return code
+        return json.loads(file.read()) #  code

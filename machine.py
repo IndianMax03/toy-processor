@@ -2,41 +2,41 @@ import logging
 import sys
 
 from isa import (
+    ALUOpcode,
     Opcode,
-    ALU_Opcode,
+    ProgramMode,
     Selectors,
-    Program_Mode,
-    read_code,
     nullar_instructions,
     onear_instructions,
-    branch_instructions,
+    read_code
 )
+from typing import ClassVar
 
 
-class Halt(Exception):
-    def __init__(self, message):
-        self.message = message
+class HaltError(Exception):
+    def __init__(self, opcode):
+        self.message = f"Met {opcode}"
         super().__init__(self.message)
 
 
 class ALU:
-    alu_operations = [
-        ALU_Opcode.INC_A,
-        ALU_Opcode.INC_B,
-        ALU_Opcode.DEC_A,
-        ALU_Opcode.DEC_B,
-        ALU_Opcode.ADD,
-        ALU_Opcode.CMP,
-        ALU_Opcode.TEST,
-        ALU_Opcode.SKIP_A,
-        ALU_Opcode.SKIP_B,
+    alu_operations: ClassVar = [
+        ALUOpcode.INC_A,
+        ALUOpcode.INC_B,
+        ALUOpcode.DEC_A,
+        ALUOpcode.DEC_B,
+        ALUOpcode.ADD,
+        ALUOpcode.CMP,
+        ALUOpcode.TEST,
+        ALUOpcode.SKIP_A,
+        ALUOpcode.SKIP_B,
     ]
-    result = None
-    src_a = None
-    src_b = None
-    operation = None
-    n_flag = None
-    z_flag = None
+    result: ClassVar = None
+    src_a: ClassVar = None
+    src_b: ClassVar = None
+    operation: ClassVar = None
+    n_flag: ClassVar = None
+    z_flag: ClassVar = None
 
     def __init__(self):
         self.result = 0
@@ -47,23 +47,23 @@ class ALU:
 
     def calc(self):
         tmp_result = None
-        if self.operation == ALU_Opcode.INC_A:
+        if self.operation == ALUOpcode.INC_A:
             self.result = self.src_a + 1
-        elif self.operation == ALU_Opcode.INC_B:
+        elif self.operation == ALUOpcode.INC_B:
             self.result = self.src_b + 1
-        elif self.operation == ALU_Opcode.DEC_A:
+        elif self.operation == ALUOpcode.DEC_A:
             self.result = self.src_a - 1
-        elif self.operation == ALU_Opcode.DEC_B:
+        elif self.operation == ALUOpcode.DEC_B:
             self.result = self.src_b - 1
-        elif self.operation == ALU_Opcode.ADD:
+        elif self.operation == ALUOpcode.ADD:
             self.result = self.src_a + self.src_b
-        elif self.operation == ALU_Opcode.CMP:
+        elif self.operation == ALUOpcode.CMP:
             tmp_result = self.src_a - self.src_b
-        elif self.operation == ALU_Opcode.TEST:
+        elif self.operation == ALUOpcode.TEST:
             tmp_result = self.src_a & self.src_b
-        elif self.operation == ALU_Opcode.SKIP_A:
+        elif self.operation == ALUOpcode.SKIP_A:
             self.result = self.src_a
-        elif self.operation == ALU_Opcode.SKIP_B:
+        elif self.operation == ALUOpcode.SKIP_B:
             self.result = self.src_b
         else:
             raise f"Unknown ALU operation: {self.operation}"
@@ -156,11 +156,13 @@ class DataPath:
         self.to_mem = self.alu.result
 
     def signal_latch_ir(self):
-        assert self.addr >= 0 and self.addr <= self.memory_size, f"Can't read out of memory!"
+        assert self.addr >= 0, "Address below memory limit"
+        assert self.addr <= self.memory_size, "Address above memory limit"
         self.ir = self.memory[self.addr]
 
     def signal_latch_dr(self):
-        assert self.addr >= 0 and self.addr <= self.memory_size, f"Can't read out of memory!"
+        assert self.addr >= 0, "Address below memory limit"
+        assert self.addr <= self.memory_size, "Address above memory limit"
         self.dr = self.memory[self.addr]["value"]
 
     def signal_latch_pc(self):
@@ -217,7 +219,7 @@ class DataPath:
         src_a = None
         src_b = None
 
-        if not (left_sel is None):
+        if left_sel is not None:
             assert left_sel in {Selectors.FROM_AC, Selectors.FROM_PS}, f"Unknown left selector '{right_sel}'"
             if left_sel == Selectors.FROM_AC:
                 src_a = self.ac
@@ -227,7 +229,7 @@ class DataPath:
                 int_en = 1 if self.ps["INT_EN"] else 0
                 src_a = n * 100 + z * 10 + int_en
 
-        if not (right_sel is None):
+        if right_sel is not None:
             assert right_sel in {
                 Selectors.FROM_DR,
                 Selectors.FROM_PC,
@@ -254,7 +256,7 @@ class ControlUnit:
     mode = None
 
     def __init__(self, program, data_path: DataPath):
-        self.mode = Program_Mode.NORMAL
+        self.mode = ProgramMode.NORMAL
         self.instruction_counter = 0
         self.data_path = data_path
         self._tick = 0
@@ -267,11 +269,11 @@ class ControlUnit:
         return self._tick
 
     def instr_fetch(self):
-        self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_PC)
+        self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_PC)
         self.data_path.signal_latch_addr()
         self.tick()
 
-        self.data_path.signal_execute_alu_op(ALU_Opcode.INC_B, right_sel=Selectors.FROM_PC)
+        self.data_path.signal_execute_alu_op(ALUOpcode.INC_B, right_sel=Selectors.FROM_PC)
         self.data_path.signal_latch_pc()
         self.data_path.signal_latch_ir()
         self.data_path.signal_latch_dr()
@@ -286,7 +288,7 @@ class ControlUnit:
             return
 
         if is_indirect:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
@@ -301,15 +303,15 @@ class ControlUnit:
 
     def execute_nullar(self, opcode):
         if opcode == Opcode.INC:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.INC_A, left_sel=Selectors.FROM_AC)
+            self.data_path.signal_execute_alu_op(ALUOpcode.INC_A, left_sel=Selectors.FROM_AC)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.DEC:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.DEC_A, left_sel=Selectors.FROM_AC)
+            self.data_path.signal_execute_alu_op(ALUOpcode.DEC_A, left_sel=Selectors.FROM_AC)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.HALT:
-            raise Halt(f"Met {Opcode.HALT}")
+            raise HaltError(Opcode.HALT)
         elif opcode == Opcode.EI:
             self.data_path.signal_enable_interrupts()
             self.tick()
@@ -317,97 +319,97 @@ class ControlUnit:
             self.data_path.signal_disable_interrupts()
             self.tick()
         elif opcode == Opcode.PUSH:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.DEC_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.DEC_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_sp()
             self.data_path.signal_latch_addr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_A, left_sel=Selectors.FROM_AC)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_A, left_sel=Selectors.FROM_AC)
             self.data_path.signal_latch_to_mem()
             self.data_path.signal_wr()
             self.tick()
         elif opcode == Opcode.POP:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_addr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.INC_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.INC_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_sp()
             self.data_path.signal_latch_dr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.IRET:
             #  Восстанавливаем PC
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_addr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.INC_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.INC_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_sp()
             self.data_path.signal_latch_dr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_pc()
             self.tick()
             #  Восстанавливаем PS
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_addr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.INC_B, right_sel=Selectors.FROM_SP)
+            self.data_path.signal_execute_alu_op(ALUOpcode.INC_B, right_sel=Selectors.FROM_SP)
             self.data_path.signal_latch_sp()
             self.data_path.signal_latch_dr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_ps()
             self.tick()
-            self.mode = Program_Mode.NORMAL
+            self.mode = ProgramMode.NORMAL
 
     def execute_onear(self, opcode):
         if opcode == Opcode.LOAD:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.STORE:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_A, left_sel=Selectors.FROM_AC)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_A, left_sel=Selectors.FROM_AC)
             self.data_path.signal_latch_to_mem()
             self.data_path.signal_wr()
             self.tick()
         elif opcode == Opcode.ADD:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
             self.data_path.signal_execute_alu_op(
-                ALU_Opcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+                ALUOpcode.ADD, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
             )
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
             self.tick()
         elif opcode == Opcode.CMP:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
             self.data_path.signal_execute_alu_op(
-                ALU_Opcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+                ALUOpcode.CMP, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
             )
             self.tick()
         elif opcode == Opcode.TEST:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
             self.data_path.signal_execute_alu_op(
-                ALU_Opcode.TEST, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
+                ALUOpcode.TEST, left_sel=Selectors.FROM_AC, right_sel=Selectors.FROM_DR
             )
             self.tick()
         elif opcode == Opcode.OUT:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
             self.tick()
             self.data_path.signal_latch_dr()
@@ -420,50 +422,50 @@ class ControlUnit:
     def execute_branch(self, opcode, ps):
         if opcode == Opcode.JG:
             if not ps["N"]:
-                self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+                self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
                 self.data_path.signal_latch_pc()
 
         elif opcode == Opcode.JZ:
             if ps["Z"]:
-                self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+                self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
                 self.data_path.signal_latch_pc()
 
         elif opcode == Opcode.JNZ:
             if not ps["Z"]:
-                self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+                self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
                 self.data_path.signal_latch_pc()
 
         elif opcode == Opcode.JMP:
-            self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+            self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_pc()
 
         self.tick()
 
     def go_to_interrupt(self):
         #  Сохраняем на стеке PS и PC
-        self.data_path.signal_execute_alu_op(ALU_Opcode.DEC_B, right_sel=Selectors.FROM_SP)
+        self.data_path.signal_execute_alu_op(ALUOpcode.DEC_B, right_sel=Selectors.FROM_SP)
         self.data_path.signal_latch_sp()
         self.data_path.signal_latch_addr()
         self.tick()
-        self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_A, left_sel=Selectors.FROM_PS)
+        self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_A, left_sel=Selectors.FROM_PS)
         self.data_path.signal_latch_to_mem()
         self.data_path.signal_wr()
         self.tick()
-        self.data_path.signal_execute_alu_op(ALU_Opcode.DEC_B, right_sel=Selectors.FROM_SP)
+        self.data_path.signal_execute_alu_op(ALUOpcode.DEC_B, right_sel=Selectors.FROM_SP)
         self.data_path.signal_latch_sp()
         self.data_path.signal_latch_addr()
         self.tick()
-        self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_PC)
+        self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_PC)
         self.data_path.signal_latch_to_mem()
         self.data_path.signal_wr()
         self.tick()
         #  Перемещаем в PC адрес подпрограммы обработки прерывания
         self.data_path.dr = 1
-        self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+        self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
         self.data_path.signal_latch_addr()
         self.tick()
         self.data_path.signal_latch_dr()
-        self.data_path.signal_execute_alu_op(ALU_Opcode.SKIP_B, right_sel=Selectors.FROM_DR)
+        self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
         self.data_path.signal_latch_pc()
 
     def check_for_interruptions(self, enabled=False):
@@ -478,7 +480,7 @@ class ControlUnit:
         schedule = self.data_path.input_buffer[0]
         if not enabled or self.current_tick() < schedule["tick"]:
             return
-        self.mode = Program_Mode.INTERRUPT
+        self.mode = ProgramMode.INTERRUPT
         self.go_to_interrupt()
 
     def decode_and_execute_instruction(self):
@@ -516,7 +518,7 @@ def simulation(code, input_tokens, memory_size, limit):
             control_unit.decode_and_execute_instruction()
             instr_counter += 1
             logging.debug("%s", control_unit)
-    except Halt:
+    except HaltError:
         pass
 
     if instr_counter >= limit:
