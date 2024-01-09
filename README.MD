@@ -10,7 +10,7 @@
 
  > asm | acc | neum | hw | instr | struct | trap | port | pstr | prob2 | spi
  >
- > Пока что без усложнения
+ > Без усложнения
 
  ### Описание варианта
 
@@ -32,6 +32,54 @@
 
 
 ## Язык программирования
+
+```ebnf
+<program> ::= <program_line> | <program_line> <end_of_line> <program>
+
+<program_line> ::= <code_line> | <comment> | <code_line> <comment>
+
+<code_line> ::= <data_definition> | <address_definition> | <label_definition> | <directive>
+
+<address_definition> ::= "org" <non_neg_number>
+
+<label_definition> ::= <label> ":"
+
+<data_definition> ::= <label> ":" <end_of_line> <data>
+
+<data> ::= ".word" <operand> | ".word" <non_neg_number> "," <string>
+
+<operand> ::= <number> | <label>
+
+<directive> ::= <onear_instruction> <address_link> | <branch_instruction> <address_link> | <nullar_instruction>
+
+<address_link> = <label> | "(" <label> ")"
+
+<label> ::= <word>
+
+<string> ::= "'" <text> "'"
+
+<comment> ::= ";" <text>
+
+<text> ::= <word> | <word> <text>
+
+<word> ::= <letter> | <letter> <word>
+
+<number> ::= [-]<non_neg_number>
+
+<non_neg_number> ::= <digit> | <digit> <non_neg_number>
+
+<nullar_instruction> ::= "inc" | "dec" | "halt" | "ei" | "di" | "push" | "pop" | "iret"
+
+<branch_instruction> ::= "jg" | "jz" | "jnz" | "jmp"
+
+<onear_instruction> ::= "load" | "store" | "add" | "out" | "in" | "cmp" | "test"
+
+<letter> ::= "a" | "b" | "c" | ... | "z" | "A" | "B" | "C" | ... | "Z" | <digit>
+
+<end_of_line> ::= "\n" | "\r\n"
+
+<digit> ::= "0" | "1" | "2" |  ... | "9"
+```
 
 ### Описание синтаксиса
 
