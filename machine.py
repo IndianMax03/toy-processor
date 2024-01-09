@@ -1,8 +1,8 @@
 import logging
 import sys
+from typing import ClassVar
 
 from isa import ALUOpcode, Opcode, ProgramMode, Selectors, nullar_instructions, onear_instructions, read_code
-from typing import ClassVar
 
 
 class HaltError(Exception):
