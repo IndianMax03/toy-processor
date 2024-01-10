@@ -352,18 +352,263 @@
 
 ## Тестирование
 
-- Краткое описание разработанных тестов.
+Реализованные программы:
 
-- Описание работы настроенного CI.
+1. [hello_world](./examples/src/hello.mt) -- печатаем 'Hello, World!'
+1. [cat](./examples/src/cat.mt) --  программа cat, повторяем ввод на выводе
+1. [hello_usr](./examples/src/hello_usr.mt) -- запросить у пользователя его имя, считать его, вывести на экран приветствие
+1. [prob2](./examples/src/prob2.mt) -- сумма четных чисел, не превышающих 4 млн, последовательности Фиббоначи
 
-- Реализацию следующих алгоритмов (должны проверяться в рамках интеграционных тестов)
+Интеграционные тесты реализованы в [integration_test](./integration_test.py):
 
-- Необходимо показать работу разработанных алгоритмов.
+- Стратегия: golden tests, конфигурация в папке [golden/](./golden/)
 
-> Кроме того, в конце отчёта необходимо привести следующий текст для трёх реализованных алгоритмов (необходимо для сбора общей аналитики по проекту):
->
-> | ФИО | <алг> | <LoC> | <code байт> | <code инстр.> | <инстр.> | <такт.> | <вариант> |
->
+CI при помощи Github Action:
+
+```yaml
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Run tests and collect coverage
+        run: |
+          poetry run coverage run -m pytest .
+          poetry run coverage report -m
+        env:
+          CI: true
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Check code formatting with Ruff
+        run: poetry run ruff format --check .
+
+      - name: Run Ruff linters
+        run: poetry run ruff check .
+```
+
+где:
+
+- `poetry` -- управления зависимостями для языка программирования Python
+- `coverage` -- формирование отчёта об уровне покрытия исходного кода
+- `pytest` -- утилита для запуска тестов
+- `ruff` -- утилита для форматирования и проверки стиля кодирования
+
+Пример использования и журнал работы процессора на примере cat:
+
+```zsh
+indianmax@MacBook-Pro-Manu toy-processor % cat examples/input/cat_input.txt
+[(10, 'P'), (41, 'e'), (70, 'n'),  (100, 's'), (130, 'k'), (160, 'o'), (190, 'i'), (220, '\n')]
+indianmax@MacBook-Pro-Manu toy-processor % cat examples/src/cat.mt         
+org 1
+vector:
+    .word interrupt
+
+org 10
+in_port:
+    .word 0
+out_port:
+    .word 1
+flag:
+    .word 0
+line_feed:
+    .word 10
+
+_start:
+    ei
+    spin_loop:
+        load flag
+        jz spin_loop
+    halt
+
+interrupt:
+    di
+    in in_port
+    out out_port
+    cmp line_feed
+    jnz returning
+    load flag
+    inc
+    store flag
+    returning:
+        iret
+indianmax@MacBook-Pro-Manu toy-processor % poetry run python ./translator.py examples/src/cat.mt target.out 
+source LoC: 32 code instr: 19
+indianmax@MacBook-Pro-Manu toy-processor % cat target.out 
+[{"index": 0, "opcode": "jmp", "value": 14, "is_indirect": false},
+ {"index": 1, "opcode": "nop", "value": 18, "is_indirect": false},
+ {"index": 10, "opcode": "nop", "value": 0, "is_indirect": false},
+ {"index": 11, "opcode": "nop", "value": 1, "is_indirect": false},
+ {"index": 12, "opcode": "nop", "value": 0, "is_indirect": false},
+ {"index": 13, "opcode": "nop", "value": 10, "is_indirect": false},
+ {"index": 14, "opcode": "ei", "value": 0, "is_indirect": false},
+ {"index": 15, "opcode": "load", "value": 12, "is_indirect": false},
+ {"index": 16, "opcode": "jz", "value": 15, "is_indirect": false},
+ {"index": 17, "opcode": "halt", "value": 0, "is_indirect": false},
+ {"index": 18, "opcode": "di", "value": 0, "is_indirect": false},
+ {"index": 19, "opcode": "in", "value": 10, "is_indirect": false},
+ {"index": 20, "opcode": "out", "value": 11, "is_indirect": false},
+ {"index": 21, "opcode": "cmp", "value": 13, "is_indirect": false},
+ {"index": 22, "opcode": "jnz", "value": 26, "is_indirect": false},
+ {"index": 23, "opcode": "load", "value": 12, "is_indirect": false},
+ {"index": 24, "opcode": "inc", "value": 0, "is_indirect": false},
+ {"index": 25, "opcode": "store", "value": 12, "is_indirect": false},
+ {"index": 26, "opcode": "iret", "value": 0, "is_indirect": false}]
+indianmax@MacBook-Pro-Manu toy-processor % poetry run python ./machine.py target.out examples/input/cat_input.txt 
+DEBUG:root:TICK:    3 | AC:    0 | PC:  14 | IR: jmp   | DR:      14 | SP:   0 | Addr:   0 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      14 | mode: normal
+DEBUG:root:TICK:    6 | AC:    0 | PC:  15 | IR: ei    | DR:       0 | SP:   0 | Addr:  14 | ToMem:       0 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+DEBUG:root:TICK:   10 | AC:    0 | PC:  16 | IR: load  | DR:       0 | SP:   0 | Addr:  12 | ToMem:       0 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:       0 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:   18 | AC:    0 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'P'
+DEBUG:root:TICK:   21 | AC:   80 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: '' << 'P'
+DEBUG:root:TICK:   25 | AC:   80 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:   29 | AC:   80 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:   32 | AC:   80 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:   40 | AC:   80 | PC:  16 | IR: iret  | DR:      11 | SP:   0 | Addr: 199 | ToMem:      16 | N: 0 | Z: 1 | INT_EN: 1 | mem[Addr]:      11 | mode: normal
+DEBUG:root:TICK:   43 | AC:   80 | PC:  15 | IR: jz    | DR:      15 | SP:   0 | Addr:  16 | ToMem:      16 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      15 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:   51 | AC:   80 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'e'
+DEBUG:root:TICK:   54 | AC:  101 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'P' << 'e'
+DEBUG:root:TICK:   58 | AC:  101 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:   62 | AC:  101 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:   65 | AC:  101 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:   73 | AC:  101 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:   81 | AC:  101 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'n'
+DEBUG:root:TICK:   84 | AC:  110 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Pe' << 'n'
+DEBUG:root:TICK:   88 | AC:  110 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:   92 | AC:  110 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:   95 | AC:  110 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  103 | AC:  110 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:  111 | AC:  110 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 's'
+DEBUG:root:TICK:  114 | AC:  115 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Pen' << 's'
+DEBUG:root:TICK:  118 | AC:  115 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  122 | AC:  115 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:  125 | AC:  115 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  133 | AC:  115 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:  141 | AC:  115 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'k'
+DEBUG:root:TICK:  144 | AC:  107 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Pens' << 'k'
+DEBUG:root:TICK:  148 | AC:  107 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  152 | AC:  107 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:  155 | AC:  107 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  163 | AC:  107 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:  171 | AC:  107 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'o'
+DEBUG:root:TICK:  174 | AC:  111 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Pensk' << 'o'
+DEBUG:root:TICK:  178 | AC:  111 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  182 | AC:  111 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:  185 | AC:  111 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  193 | AC:  111 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:  201 | AC:  111 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: 'i'
+DEBUG:root:TICK:  204 | AC:  105 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Pensko' << 'i'
+DEBUG:root:TICK:  208 | AC:  105 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  212 | AC:  105 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:  215 | AC:  105 | PC:  26 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  223 | AC:  105 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+WARNING:root:Entering into interruption...
+DEBUG:root:TICK:  231 | AC:  105 | PC:  19 | IR: di    | DR:       0 | SP: 198 | Addr:  18 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:input: '\n'
+DEBUG:root:TICK:  234 | AC:   10 | PC:  20 | IR: in    | DR:      10 | SP: 198 | Addr:  19 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:output_symbol_buffer: 'Penskoi' << '\n'
+DEBUG:root:TICK:  238 | AC:   10 | PC:  21 | IR: out   | DR:       1 | SP: 198 | Addr:  11 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  242 | AC:   10 | PC:  22 | IR: cmp   | DR:      10 | SP: 198 | Addr:  13 | ToMem:      15 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:      10 | mode: interrupt
+DEBUG:root:TICK:  245 | AC:   10 | PC:  23 | IR: jnz   | DR:      26 | SP: 198 | Addr:  22 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:      26 | mode: interrupt
+DEBUG:root:TICK:  249 | AC:    0 | PC:  24 | IR: load  | DR:       0 | SP: 198 | Addr:  12 | ToMem:      15 | N: 0 | Z: 1 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:TICK:  252 | AC:    1 | PC:  25 | IR: inc   | DR:       0 | SP: 198 | Addr:  24 | ToMem:      15 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       0 | mode: interrupt
+DEBUG:root:TICK:  256 | AC:    1 | PC:  26 | IR: store | DR:      12 | SP: 198 | Addr:  12 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 0 | mem[Addr]:       1 | mode: interrupt
+DEBUG:root:TICK:  264 | AC:    1 | PC:  15 | IR: iret  | DR:       1 | SP:   0 | Addr: 199 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+DEBUG:root:TICK:  268 | AC:    1 | PC:  16 | IR: load  | DR:       1 | SP:   0 | Addr:  12 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:       1 | mode: normal
+DEBUG:root:TICK:  271 | AC:    1 | PC:  17 | IR: jz    | DR:      15 | SP:   0 | Addr:  16 | ToMem:       1 | N: 0 | Z: 0 | INT_EN: 1 | mem[Addr]:      15 | mode: normal
+INFO:root:output_symbol_buffer: 'Penskoi\n'
+INFO:root:output_numeric_buffer: []
+Penskoi
+
+[]
+instr_counter:  57 ticks: 273
+```
+
+Пример проверки исходного кода:
+
+```zsh
+indianmax@MacBook-Pro-Manu toy-processor % poetry run pytest . -v --update-goldens
+=============================================================================== test session starts ===============================================================================
+platform darwin -- Python 3.10.11, pytest-7.4.4, pluggy-1.3.0 -- /Users/indianmax/Library/Caches/pypoetry/virtualenvs/toy-processor-O8lz_399-py3.10/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/indianmax/Desktop/projects/csa/toy-processor
+configfile: pyproject.toml
+plugins: golden-0.2.2
+collected 4 items                                                                                                                                                                 
+
+integration_test.py::test_translator_and_machine[golden/cat.yml] PASSED                                                                                                     [ 25%]
+integration_test.py::test_translator_and_machine[golden/prob2.yml] PASSED                                                                                                   [ 50%]
+integration_test.py::test_translator_and_machine[golden/hello.yml] PASSED                                                                                                   [ 75%]
+integration_test.py::test_translator_and_machine[golden/hello_usr.yml] PASSED                                                                                               [100%]
+
+================================================================================ 4 passed in 0.44s ================================================================================
+indianmax@MacBook-Pro-Manu toy-processor % poetry run ruff check .
+indianmax@MacBook-Pro-Manu toy-processor % poetry run ruff format .
+4 files left unchanged
+```
+
+```text
+| ФИО                      | алг             | LoC | code байт | code инстр. | инстр. | такт. | вариант |
+| Тучков Максим Русланович | hello           | 24  | -         | 30          | 120    | 468   | asm | acc | neum | hw | instr | struct | trap | port | pstr | prob2 | spi |
+| Тучков Максим Русланович | cat             | 32  | -         | 19          | 57     | 273   | asm | acc | neum | hw | instr | struct | trap | port | pstr | prob2 | spi |
+| Тучков Максим Русланович | hello_user_name | 112 | -         | 103         | 444    | 1738  | asm | acc | neum | hw | instr | struct | trap | port | pstr | prob2 | spi |
+| Тучков Максим Русланович | prob2           | 38  | -         | 26          | 411    | 1551  | asm | acc | neum | hw | instr | struct | trap | port | pstr | prob2 | spi |
+```
+
 > где:
 >
 > алг. -- название алгоритма (hello, cat, или как в варианте)
