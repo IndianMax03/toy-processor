@@ -475,9 +475,9 @@ class ControlUnit:
         self.execute()
         self.data_path.signal_latch_ps_flags()
         next_interrupt = self.check_for_interruptions(self.data_path.ps["INT_EN"])
-        
+
         logging.debug("%s", self)
-        
+
         if next_interrupt:
             logging.warning("Entering into interruption...")
             self.mode = ProgramMode.INTERRUPT
