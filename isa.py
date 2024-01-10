@@ -73,10 +73,6 @@ branch_instructions = [Opcode.JG, Opcode.JZ, Opcode.JNZ, Opcode.JMP]
 
 onear_instructions = [Opcode.LOAD, Opcode.STORE, Opcode.ADD, Opcode.OUT, Opcode.IN, Opcode.CMP, Opcode.TEST]
 
-pseudo_commands = ["org"]
-
-data_types = [".word"]
-
 
 def write_code(filename, code):
     with open(filename, "w", encoding="utf-8") as file:

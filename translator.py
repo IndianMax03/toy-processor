@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import sys
 
 from isa import Opcode, write_code
 
 
-def symbol_to_opcode(symbol):
+def symbol_to_opcode(symbol) -> Opcode:
     """Отображение операторов исходного кода в коды операций."""
     return {
         "nop": Opcode.NOP,
@@ -29,7 +31,7 @@ def symbol_to_opcode(symbol):
     }.get(symbol, Opcode.NOP)
 
 
-def read_lines(source_filename: str) -> [str]:
+def read_lines(source_filename: str) -> tuple[list[str], int]:
     """Построчно читаем файл, убираем отступы и пустые строки"""
     source_loc = 0
     lines = []
@@ -42,7 +44,7 @@ def read_lines(source_filename: str) -> [str]:
     return lines, source_loc
 
 
-def remove_comments(code_lines) -> [str]:
+def remove_comments(code_lines) -> list[str]:
     """Убираем комменарии"""
     without_comments = []
     for line in code_lines:
@@ -56,7 +58,7 @@ def remove_comments(code_lines) -> [str]:
     return without_comments
 
 
-def parse_word(position, word_line, words):
+def parse_word(position, word_line, words) -> tuple[int, dict]:
     """Индексация слова данных (в т.ч. разбиение строк по буквам)"""
     char_num = 0
     while char_num < len(word_line):
@@ -87,7 +89,7 @@ def parse_word(position, word_line, words):
     return position, words
 
 
-def lines_to_words_and_labels(code_lines):
+def lines_to_words_and_labels(code_lines) -> tuple[dict, dict]:
     """Трансляция строк кода в операторы (без привязки к языку)"""
     labels = {}
     words = {}
@@ -109,7 +111,7 @@ def lines_to_words_and_labels(code_lines):
     return words, labels
 
 
-def find_program_start(labels):
+def find_program_start(labels) -> int:
     counter = 0
     position = None
     for index, label in labels.items():
@@ -120,7 +122,7 @@ def find_program_start(labels):
     return position
 
 
-def link_labels(words, labels):
+def link_labels(words, labels) -> dict:
     """Подмена меток на индексы + установка вида адресации (True - косвенный)"""
     replaced = {}
     for w_index, word in words.items():
@@ -139,7 +141,7 @@ def link_labels(words, labels):
     return replaced
 
 
-def to_machine_code(raw_code, _start_position):
+def to_machine_code(raw_code, _start_position) -> list:
     code = [{"index": 0, "opcode": Opcode.JMP, "value": _start_position, "is_indirect": False}]
     for index, word in raw_code.items():
         if len(word) == 2:
@@ -158,7 +160,7 @@ def to_machine_code(raw_code, _start_position):
     return code
 
 
-def translate(source_filename, debug_mode=False):
+def translate(source_filename) -> tuple[list, int]:
     """Многопроходная трансляция программы в машинный код"""
     lines, source_loc = read_lines(source_filename)
     lines_without_comments = remove_comments(lines)
@@ -170,7 +172,7 @@ def translate(source_filename, debug_mode=False):
 
 
 def main(source_filename, target_filename):
-    code, source_loc = translate(source_filename, True)
+    code, source_loc = translate(source_filename)
 
     write_code(target_filename, code)
 

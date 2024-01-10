@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 from typing import ClassVar
@@ -26,9 +28,9 @@ class ALU:
     result: ClassVar = None
     src_a: ClassVar = None
     src_b: ClassVar = None
-    operation: ClassVar = None
-    n_flag: ClassVar = None
-    z_flag: ClassVar = None
+    operation: ClassVar[ALUOpcode] = None
+    n_flag: ClassVar[bool] = None
+    z_flag: ClassVar[bool] = None
 
     def __init__(self):
         self.result = 0
@@ -69,7 +71,7 @@ class ALU:
             self.n_flag = tmp_result < 0
             self.z_flag = tmp_result == 0
 
-    def set_details(self, src_a, src_b, operation):
+    def set_details(self, src_a, src_b, operation : ALUOpcode):
         assert operation in self.alu_operations, f"Unknown ALU operation: {operation}"
         self.src_a = src_a
         self.src_b = src_b
@@ -119,7 +121,7 @@ class DataPath:
     alu = None
     "АЛУ"
 
-    def __init__(self, memory_size, input_buffer):
+    def __init__(self, memory_size: int, input_buffer: list):
         assert memory_size > 0, "memory size should be greater than zero"
         self.alu = ALU()
         self.memory_size = memory_size
@@ -136,7 +138,7 @@ class DataPath:
         self.output_symbol_buffer = []
         self.output_numeric_buffer = []
 
-    def signal_fill_memory(self, program):
+    def signal_fill_memory(self, program: list):
         for mem_cell in program:
             index = mem_cell["index"]
             self.memory[index] = mem_cell
@@ -178,7 +180,7 @@ class DataPath:
     def signal_disable_interrupts(self):
         self.ps["INT_EN"] = False
 
-    def signal_latch_ac(self, sel):
+    def signal_latch_ac(self, sel : Selectors):
         assert sel in {Selectors.FROM_INPUT, Selectors.FROM_ALU}, f"Unknown selector '{sel}'"
         if sel == Selectors.FROM_ALU:
             self.ac = self.alu.result
@@ -207,7 +209,7 @@ class DataPath:
             "is_indirect": False,
         }
 
-    def signal_execute_alu_op(self, operation, left_sel=None, right_sel=None):
+    def signal_execute_alu_op(self, operation, left_sel : Selectors = None, right_sel : Selectors = None):
         src_a = None
         src_b = None
 
@@ -247,7 +249,7 @@ class ControlUnit:
 
     mode = None
 
-    def __init__(self, program, data_path: DataPath):
+    def __init__(self, program : list, data_path: DataPath):
         self.mode = ProgramMode.NORMAL
         self.instruction_counter = 0
         self.data_path = data_path
@@ -257,7 +259,7 @@ class ControlUnit:
     def tick(self):
         self._tick += 1
 
-    def current_tick(self):
+    def current_tick(self) -> int:
         return self._tick
 
     def instr_fetch(self):
@@ -293,7 +295,7 @@ class ControlUnit:
         else:
             self.execute_branch(opcode, ps)
 
-    def execute_nullar(self, opcode):
+    def execute_nullar(self, opcode : Opcode):
         if opcode == Opcode.INC:
             self.data_path.signal_execute_alu_op(ALUOpcode.INC_A, left_sel=Selectors.FROM_AC)
             self.data_path.signal_latch_ac(Selectors.FROM_ALU)
@@ -355,7 +357,7 @@ class ControlUnit:
             self.tick()
             self.mode = ProgramMode.NORMAL
 
-    def execute_onear(self, opcode):
+    def execute_onear(self, opcode : Opcode):
         if opcode == Opcode.LOAD:
             self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
             self.data_path.signal_latch_addr()
@@ -407,7 +409,7 @@ class ControlUnit:
             self.data_path.signal_latch_ac(Selectors.FROM_INPUT)
             self.tick()
 
-    def execute_branch(self, opcode, ps):
+    def execute_branch(self, opcode : Opcode, ps : dict):
         if opcode == Opcode.JG:
             if not ps["N"]:
                 self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
@@ -456,7 +458,7 @@ class ControlUnit:
         self.data_path.signal_execute_alu_op(ALUOpcode.SKIP_B, right_sel=Selectors.FROM_DR)
         self.data_path.signal_latch_pc()
 
-    def check_for_interruptions(self, enabled=False):
+    def check_for_interruptions(self, enabled : bool = False) -> bool:
         position = 0
         for index, val in enumerate(self.data_path.input_buffer):
             if val["tick"] > self.current_tick():
@@ -483,7 +485,7 @@ class ControlUnit:
             self.mode = ProgramMode.INTERRUPT
             self.go_to_interrupt()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "TICK: {:4} | AC: {:4} | PC: {:3} | IR: {:5} | DR: {:7} | SP: {:3} | Addr: {:3} | ToMem: {:7} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:7} | mode: {}".format(
             self.current_tick(),
             self.data_path.ac,
@@ -501,7 +503,7 @@ class ControlUnit:
         )
 
 
-def simulation(code, input_tokens, memory_size, limit):
+def simulation(code : list, input_tokens : list, memory_size : int, limit : int) -> tuple[list, list, int, int]:
     data_path = DataPath(memory_size, input_tokens)
     control_unit = ControlUnit(code, data_path)
     instr_counter = 0
@@ -522,7 +524,7 @@ def simulation(code, input_tokens, memory_size, limit):
     return symbols, numbers, instr_counter, control_unit.current_tick()
 
 
-def parse_to_tokens(input_file):
+def parse_to_tokens(input_file : str) -> list:
     tokens = []
     with open(input_file, encoding="utf-8") as file:
         input_text = file.read()
@@ -537,7 +539,7 @@ def parse_to_tokens(input_file):
     return tokens
 
 
-def main(code_file, input_file):
+def main(code_file : str, input_file : str):
     code = read_code(code_file)
     input_token = parse_to_tokens(input_file)
 
