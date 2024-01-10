@@ -464,18 +464,24 @@ class ControlUnit:
                 break
         self.data_path.input_buffer = self.data_path.input_buffer[0 if position == 0 else position - 1 :]
         if not self.data_path.input_buffer:
-            return
+            return False
         schedule = self.data_path.input_buffer[0]
         if not enabled or self.current_tick() < schedule["tick"]:
-            return
-        self.mode = ProgramMode.INTERRUPT
-        self.go_to_interrupt()
+            return False
+        return True
 
     def decode_and_execute_instruction(self):
         self.instr_fetch()
         self.execute()
         self.data_path.signal_latch_ps_flags()
-        self.check_for_interruptions(self.data_path.ps["INT_EN"])
+        next_interrupt = self.check_for_interruptions(self.data_path.ps["INT_EN"])
+        
+        logging.debug("%s", self)
+        
+        if next_interrupt:
+            logging.warning("Entering into interruption...")
+            self.mode = ProgramMode.INTERRUPT
+            self.go_to_interrupt()
 
     def __repr__(self):
         return "TICK: {:4} | AC: {:4} | PC: {:3} | IR: {:5} | DR: {:7} | SP: {:3} | Addr: {:3} | ToMem: {:7} | N: {:1} | Z: {:1} | INT_EN: {:1} | mem[Addr]: {:7} | mode: {}".format(
@@ -500,12 +506,10 @@ def simulation(code, input_tokens, memory_size, limit):
     control_unit = ControlUnit(code, data_path)
     instr_counter = 0
 
-    logging.debug("%s", control_unit)
     try:
         while instr_counter < limit:
             control_unit.decode_and_execute_instruction()
             instr_counter += 1
-            logging.debug("%s", control_unit)
     except HaltError:
         pass
 
